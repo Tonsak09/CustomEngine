@@ -4,12 +4,25 @@
 
 #include "ShaderInclude.hlsli"
 
+// TODO:	Pass in variables that need to be read by sampler
+//			so that we do not read more than once
+
+/*
 Texture2D SurfaceTexture : register(t0); // "t" registers for textures
 Texture2D SpeculuarTexture : register(t1); // "t" registers for textures
-
 Texture2D NormalMap : register(t2);
-TextureCube Environment : register(t3);
 SamplerState BasicSampler : register(s0); // "s" registers for samplers
+*/
+
+static const float F0_NON_METAL = 0.04f;
+
+Texture2D Albedo : register(t0); 
+Texture2D NormalMap : register(t1);
+Texture2D RoughnessMap : register(t2);
+Texture2D MetalnessMap : register(t3); 
+SamplerState BasicSampler : register(s0);
+
+TextureCube Environment : register(t4);
 
 cbuffer ExternalData : register(b0)
 {
@@ -31,30 +44,37 @@ float2 GetUV(VertexToPixel input)
 	return input.uv + uvOffset;
 }
 
-float3 GetSurfaceColor(VertexToPixel input)
+float3 GetAlbedo(VertexToPixel input)
 {
-	float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, GetUV(input)).rgb;
-	return surfaceColor;
+	float3 surfaceColor = Albedo.Sample(BasicSampler, GetUV(input)).rgb;
+	return pow(surfaceColor.rgb, 2.2f);
+}
+
+float GetRoughness(VertexToPixel input)
+{
+	return RoughnessMap.Sample(BasicSampler, input.uv).r;
+}
+
+float GetMetalness(VertexToPixel input)
+{
+	return MetalnessMap.Sample(BasicSampler, input.uv).r;
 }
 
 float GetSpec(VertexToPixel input)
 {
-	return SpeculuarTexture.Sample(BasicSampler, GetUV(input)).r;
+	return lerp(F0_NON_METAL, GetAlbedo(input).rgb, GetMetalness(input));
+	//return SpeculuarTexture.Sample(BasicSampler, GetUV(input)).r;
 }
 
-float Attenuate(Light light, float3 worldPos)
-{
-	float dist = distance(light.position, worldPos);
-	float att = saturate(1.0f - (dist * dist / (light.range * light.range)));
-	return att * att;
-}
 
+
+`
 float3 DirLight(Light light, VertexToPixel input, float3 ambient, float roughness)
 {
 	float3 lightDir = normalize(-light.directiton);
 	float3 diffuse = saturate(dot(input.normal, lightDir));
 
-	float3 diffColor = (diffuse * light.color * GetSurfaceColor(input)) + (ambient * GetSurfaceColor(input));
+	float3 diffColor = (diffuse * light.color * GetAlbedo(input)) + (ambient * GetAlbedo(input));
 
 	float specExponent = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
 	float3 V = normalize(input.worldPosition - camPos);
@@ -70,7 +90,7 @@ float3 PointLight(Light light, VertexToPixel input, float3 ambient, float roughn
 	float3 lightDir = normalize(light.position - input.worldPosition);
 	float3 diffuse = saturate(dot(input.normal, lightDir));
 
-	float3 diffColor = (diffuse * light.color * GetSurfaceColor(input)) + (ambient * GetSurfaceColor(input));
+	float3 diffColor = (diffuse * light.color * GetAlbedo(input)) + (ambient * GetAlbedo(input));
 
 	float specExponent = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
 	float3 V = normalize(input.worldPosition - camPos);
@@ -79,6 +99,13 @@ float3 PointLight(Light light, VertexToPixel input, float3 ambient, float roughn
 	float spec = pow(saturate(dot(R, V)), specExponent) * GetSpec(input) * any(diffuse);
 
 	return (diffColor * diffuse + spec) * Attenuate(light, input.worldPosition);
+}
+
+float Attenuate(Light light, float3 worldPos)
+{
+	float dist = distance(light.position, worldPos);
+	float att = saturate(1.0f - (dist * dist / (light.range * light.range)));
+	return att * att;
 }
 
 
@@ -129,5 +156,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// 0.04f is recommended amount 
 	float3 finalColor = lerp(totalLight, reflectionColor, SimpleFresnel(input.normal, viewVector, 0.04f));
 
-	return float4(finalColor, 1);
+	return float4(pow(finalColor, 1.0f / 2.2f), 1);
 }
