@@ -30,21 +30,35 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 		DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
 		entities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
 
+
+		// For point light 
+		float distance = 0;
+		
 		int dLights = 1;
 		int sLights = 1;
 		int pLights = 1;
 		for (int l = 0; l < lights.size(); l++)
 		{
-			int lightType = lights[l]->type;
-			std::string name; //= (lights[l].type == 0 ? "directionalLight" : "spotLight") + std::to_string(l + 1);
+			Light* light = lights[l].get();
+			std::string name; 
 
-			switch (lightType)
+			switch (light->type)
 			{
 			case LIGHT_TYPE_DIRECTIONAL:
 				name = "directionalLight" + std::to_string(dLights);
 				dLights++;
 				break;
 			case  LIGHT_TYPE_POINT:
+				DirectX::XMVECTOR vector1 = DirectX::XMLoadFloat3(&light->position);
+				DirectX::XMVECTOR vector2 = DirectX::XMLoadFloat3(entities[i]->GetTransform()->GetPosition().get());
+				DirectX::XMVECTOR vectorSub = DirectX::XMVectorSubtract(vector1, vector2);
+				DirectX::XMVECTOR length = DirectX::XMVector3Length(vectorSub);
+
+				DirectX::XMStoreFloat(&distance, length);
+				// Don't add light if out of range 
+				if (light->range < distance)
+					continue;
+
 				name = "pointLight" + std::to_string(pLights);
 				pLights++;
 				break;

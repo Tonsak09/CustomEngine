@@ -37,10 +37,10 @@ void Entity::Draw(
 
 
 	std::shared_ptr<SimpleVertexShader> vs = mat->GetVertexShader();
-	vs->SetFloat4("colorTint", mat->GetTint()); // Strings here MUST
-	vs->SetMatrix4x4("world", transform.GetWorldMatrix()); // match variable
-	vs->SetMatrix4x4("viewMatrix", *camera->GetViewMatrix().get()); // names in your
-	vs->SetMatrix4x4("projMatrix", *camera->GetProjMatrix().get()); // shader’s cbuffer!
+	vs->SetFloat4("colorTint", mat->GetTint());
+	vs->SetMatrix4x4("world", transform.GetWorldMatrix()); 
+	vs->SetMatrix4x4("viewMatrix", *camera->GetViewMatrix().get()); 
+	vs->SetMatrix4x4("projMatrix", *camera->GetProjMatrix().get()); 
 	vs->SetMatrix4x4("worldInvTranspose", transform.GetWorldInverseTransposeMatrix());
 
 	vs->CopyAllBufferData();
@@ -51,7 +51,7 @@ void Entity::Draw(
 	//Transform* trans = camera->GetTransform();
 	//DirectX::XMFLOAT3 pos = trans->GetPosition();
 	ps->SetFloat3("camPos", *(camera->GetTransform()->GetPosition().get()));
-	ps->SetFloat("roughness", mat->GetRoughness());
+	//ps->SetFloat("roughness", mat->GetRoughness());
 	ps->SetFloat2("uvOffset", mat->GetUVOffset());
 
 	ps->CopyAllBufferData();

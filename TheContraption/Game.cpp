@@ -94,10 +94,10 @@ void Game::Init()
 		// Essentially: "What kind of shape should the GPU draw with our vertices?"
 		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		// Ensure the pipeline knows how to interpret all the numbers stored in
-		// the vertex buffer. For this course, all of your vertices will probably
-		// have the same layout, so we can just set this once at startup.
-		//context->IASetInputLayout(inputLayout.Get());
+// Ensure the pipeline knows how to interpret all the numbers stored in
+// the vertex buffer. For this course, all of your vertices will probably
+// have the same layout, so we can just set this once at startup.
+//context->IASetInputLayout(inputLayout.Get());
 	}
 
 	// Initialize ImGui
@@ -111,7 +111,7 @@ void Game::Init()
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(device.Get(), context.Get());
 
-	
+
 	OnResize();
 }
 
@@ -163,7 +163,8 @@ void Game::LoadLights()
 	scene->SetLights(lights);
 }
 
-void Game::SetupLitMaterial(std::shared_ptr<Material> mat,
+void Game::SetupLitMaterial(
+	std::shared_ptr<Material> mat,
 	const wchar_t albedoTextureAddress[],
 	const wchar_t speculuarMapAddress[],
 	const wchar_t normalMapAddress[],
@@ -174,7 +175,7 @@ void Game::SetupLitMaterial(std::shared_ptr<Material> mat,
 	matToResources[mat] = tempData;
 	MatData* data = tempData.get();
 
-	// Load in the textures 
+	// Load in the textures and store them into matdata
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(albedoTextureAddress).c_str(), nullptr, data->albedo.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(speculuarMapAddress).c_str(), nullptr, data->spec.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(normalMapAddress).c_str(), nullptr, data->normal.GetAddressOf());
@@ -184,6 +185,35 @@ void Game::SetupLitMaterial(std::shared_ptr<Material> mat,
 	mat.get()->AddTextureSRV("SurfaceTexture", data->albedo);
 	mat.get()->AddTextureSRV("NormalMap", data->normal);
 	mat.get()->AddTextureSRV("SpeculuarTexture", data->spec);
+}
+
+void Game::SetupPBRMaterial(
+	std::shared_ptr<Material> mat,
+	const wchar_t albedoTextureAddress[],
+	const wchar_t normalMapAddress[],
+	const wchar_t roughnessMapAddress[],
+	const wchar_t metalMapAddress[],
+	Sky* sky,
+	const char samplerType[])
+{
+	// Create the data storage struct 
+	std::shared_ptr<MatData> tempData = std::make_shared<MatData>(device);
+	matToResources[mat] = tempData;
+	MatData* data = tempData.get();
+
+	// Load in the textures and store them into matdata
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(albedoTextureAddress).c_str(), nullptr, data->albedo.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(normalMapAddress).c_str(), nullptr, data->normal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(roughnessMapAddress).c_str(), nullptr, data->roughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(metalMapAddress).c_str(), nullptr, data->metal.GetAddressOf());
+
+	// Apply to shader registers 
+	mat.get()->AddSampler("BasicSampler", sampler);
+	mat.get()->AddTextureSRV("Albedo", data->albedo);
+	mat.get()->AddTextureSRV("NormalMap", data->normal);
+	mat.get()->AddTextureSRV("RoughnessMap", data->roughness);
+	mat.get()->AddTextureSRV("MetalnessMap", data->metal);
+	mat.get()->AddTextureSRV("Environment", sky->GetCubeSRV());
 }
 
 // --------------------------------------------------------
@@ -242,7 +272,7 @@ void Game::CreateGeometry()
 
 	schlickBricks = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
 	schlickCushions = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
-
+	schlickBronze = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
 	
 
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
@@ -274,34 +304,46 @@ void Game::CreateGeometry()
 		L"../../Assets/Textures/original.png"
 	);
 
-	SetupLitMaterial(
-		schlickBricks,
-		L"../../Assets/Textures/ass9/cobblestone.png",
-		L"../../Assets/Textures/rustymetal_specular.png",
-		L"../../Assets/Textures/ass9/cobblestone_normals.png"
+	SetupPBRMaterial(
+		schlickBronze,
+		L"../../Assets/Textures/PBR/bronze_albedo.png",
+		L"../../Assets/Textures/PBR/bronze_normals.png",
+		L"../../Assets/Textures/PBR/bronze_roughness",
+		L"../../Assets/Textures/PBR/bronze_metal",
+		sky.get()
 	);
-	schlickBricks->AddTextureSRV("Environment", sky->GetCubeSRV());
 
-	SetupLitMaterial(
-		schlickCushions,
-		L"../../Assets/Textures/ass9/cushion.png",
-		L"../../Assets/Textures/rustymetal_specular.png",
-		L"../../Assets/Textures/ass9/cushion_normals.png"
+	SetupPBRMaterial(
+		schlickBricks,
+		L"../../Assets/Textures/PBR/cobblestone_albedo.png",	// Albedo
+		L"../../Assets/Textures/PBR/cobblestone_normals.png",	// Normals
+		L"../../Assets/Textures/PBR/cobblestone_roughness",		// Roughness
+		L"../../Assets/Textures/PBR/cobblestone_metal",			// Metalness 
+		sky.get()
 	);
-	schlickCushions->AddTextureSRV("Environment", sky->GetCubeSRV());
+
+	SetupPBRMaterial(
+		schlickCushions,
+		L"../../Assets/Textures/PBR/wood_albedo.png",
+		L"../../Assets/Textures/PBR/wood_normals.png",
+		L"../../Assets/Textures/PBR/wood_roughness",
+		L"../../Assets/Textures/PBR/wood_metal",
+		sky.get()
+	);
 	
 	std::vector<std::shared_ptr<Entity>> entities = std::vector<std::shared_ptr<Entity>>();
 
 	// Add all entites to the primary vector 
-	entities.push_back(std::shared_ptr<Entity>(new Entity(helix, lit)));
+	entities.push_back(std::shared_ptr<Entity>(new Entity(helix, schlickBricks)));
 	entities[0]->GetTransform()->SetPosition(1.0f, 0.0f, 0.0f);
 
-	entities.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBricks)));
+	entities.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 	entities[1]->GetTransform()->MoveRelative(5.0f, 0.0f, 0.0f);
 
 	entities.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickCushions)));
 	entities[2]->GetTransform()->MoveRelative(-5.0f, 0.0f, 0.0f);
 
+	// Put all into scene(s)
 	scene->SetEntities(entities);
 	scene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 }
@@ -451,51 +493,6 @@ void Game::Draw(float deltaTime, float totalTime)
 	scene->DrawLightsGui(context);
 	scene->DrawSky(context);
 	
-	//for (unsigned int i = 0; i < entities.size(); i++)
-	//{
-	//	DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
-	//	entities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
-
-	//	int dLights = 1; 
-	//	int sLights = 1;
-	//	int pLights = 1;
-	//	for (int l = 0; l < lights.size(); l++)
-	//	{
-	//		int lightType = lights[l].type;
-	//		std::string name; //= (lights[l].type == 0 ? "directionalLight" : "spotLight") + std::to_string(l + 1);
-
-	//		switch (lightType)
-	//		{
-	//		case LIGHT_TYPE_DIRECTIONAL:
-	//			name = "directionalLight" + std::to_string(dLights);
-	//			dLights++;
-	//			break;
-	//		case  LIGHT_TYPE_POINT :
-	//			name = "pointLight" + std::to_string(pLights);
-	//			pLights++;
-	//			break;
-	//		case LIGHT_TYPE_SPOT: // Not implemented yet 
-	//		default:
-	//			continue;
-	//		}
-
-	//		entities[i]->GetMat()->GetPixelShader()->SetData(
-	//			name, // The name of the (eventual) variable in the shader
-	//			&lights[l], // The address of the data to set
-	//			sizeof(Light)); // The size of the data (the whole struct!) to set
-	//	}
-
-
-
-	//	entities[i]->Draw(context, cameras[currentCam]);
-	//}
-
-	/*for (unsigned int i = 0; i < lightGizmos.size(); i++)
-	{
-		lightGizmos[i]->Draw(context, cameras[currentCam]);
-	}*/
-
-	//sky->Draw(cameras[currentCam]);
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME

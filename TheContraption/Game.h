@@ -62,6 +62,16 @@ private:
 		const char samplerType[] = "BasicSampler"
 		);
 
+	void SetupPBRMaterial(
+		std::shared_ptr<Material> mat,
+		const wchar_t albedoTextureAddress[],
+		const wchar_t normalMapAddress[],
+		const wchar_t roughnessMapAddress[],
+		const wchar_t metalMapAddress[],
+		Sky* sky,
+		const char samplerType[] = "BasicSampler"
+	);
+
 	// Buffers to hold actual geometry data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
@@ -86,6 +96,7 @@ private:
 	std::shared_ptr<Material> lit;
 	std::shared_ptr<Material> schlickBricks;
 	std::shared_ptr<Material> schlickCushions;
+	std::shared_ptr<Material> schlickBronze;
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
 
