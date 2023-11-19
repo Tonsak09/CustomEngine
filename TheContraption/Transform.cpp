@@ -187,7 +187,7 @@ int Transform::GetChildIndex(std::shared_ptr<Transform> child)
 {
 	// Better to have a has table? 
 
-	int size = children.size();
+	unsigned int size = (unsigned int)children.size();
 	for (unsigned int i = 0; i < size; i++)
 	{
 		if (child == children[i])
@@ -202,7 +202,7 @@ int Transform::GetChildIndex(std::shared_ptr<Transform> child)
 
 unsigned int Transform::GetChildCount()
 {
-	return children.size();
+	return (unsigned int)children.size();
 }
 
 #pragma endregion
@@ -252,9 +252,9 @@ void Transform::MoveRelative(DirectX::XMFLOAT3 vec)
 	
 	// Turn the euler angles into a quaternion 
 	DirectX::XMVECTOR rotQuat = DirectX::XMQuaternionRotationRollPitchYaw(
-		DirectX::XMVectorGetIntX(rotEuler),
-		DirectX::XMVectorGetIntY(rotEuler),
-		DirectX::XMVectorGetIntZ(rotEuler)
+		(float)DirectX::XMVectorGetIntX(rotEuler),
+		(float)DirectX::XMVectorGetIntY(rotEuler),
+		(float)DirectX::XMVectorGetIntZ(rotEuler)
 	);
 	
 	DirectX::XMVECTOR toMove = DirectX::XMLoadFloat3(&vec);

@@ -402,8 +402,8 @@ void Game::OnResize()
 {
 	// Handle base-level DX resize stuff
 	DXCore::OnResize();
-
-	scene->ResizeCam((float)this->windowWidth, this->windowHeight);
+	 
+	scene->ResizeCam((float)this->windowWidth, (float)this->windowHeight);
 }
 
 void Game::UpdateImGui(float deltaTime)
