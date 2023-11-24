@@ -428,6 +428,77 @@ void Game::CreateCameras()
 	animScene->SetCameras(cameras);
 }
 
+void Game::CreateMoveAnim(
+	std::shared_ptr<DirectX::XMFLOAT3> pos,				// Vec3 that is being moved 
+	DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 target,	// Start and target position
+	float time,											// Amount of time animtion will take 
+	int curveType)										// Animation curve to follow 
+{
+	float lerp = 0.0f;
+
+	
+}
+
+void Game::AnimSceneLogic(float deltaTime)
+{
+	//deltaTime /= 100.0f;
+
+	// Whether the object has been broken apart 
+	static bool isSplit = true;
+	// Whether the object is being animated or not 
+	static bool inAnimation = false;
+	// Use to transition between one pos to the next 
+	static float timer = 0.0f;
+
+	static float time = 2.0f;
+	static int curveType = EASE_IN_BOUNCE;
+
+
+	static DirectX::XMFLOAT3 inPos(-5, 0, 0);
+	static DirectX::XMFLOAT3 outPos(5, 0, 0);
+
+	// TODO - Make global so imgui can access 
+	// When button is pressed and needs to begin animation 
+	static bool needsChange = true;
+
+
+	if (needsChange)
+	{
+		// Setup for animation 
+		needsChange = false;
+		inAnimation = true;
+
+		//startPos = *animScene->GetEntities()[0]->GetTransform()->GetPosition();
+	}
+	else if (inAnimation)
+	{
+		if (isSplit)
+		{
+			// Bring back together 
+			DirectX::XMFLOAT3 current;
+			DirectX::XMStoreFloat3(
+				&current,											
+				DirectX::XMLoadFloat3(&inPos) + (DirectX::XMLoadFloat3(&outPos) - DirectX::XMLoadFloat3(&inPos)) * GetCurveByIndex(curveType, timer / time));	// Unclamped Lerp 
+
+			animScene->GetEntities()[0]->GetTransform()->SetPosition(current); // Store 
+			timer += deltaTime;
+			
+		}
+		else
+		{
+			// Set apart 
+		}
+
+		// Animation is complete 
+		if (timer > time)
+		{
+			// Reset variables 
+			inAnimation = false;
+			isSplit = !isSplit;
+		}
+	}
+}
+
 // --------------------------------------------------------
 // Handle resizing to match the new window size.
 //  - DXCore needs to resize the back buffer
@@ -466,34 +537,55 @@ void Game::UpdateImGui(float deltaTime)
 	ImGui::Text("Window Width: %i", windowWidth);
 	ImGui::Text("Window Height: %i", windowHeight);
 
-	// Scenes 
+	// Scene Management
 	sceneGui->CreateSceneGui(scenes, &currentScene);
-	ImGui::Dummy(ImVec2(0.0f, 20.0f));
 
-	// Buttons 
-	if (ImGui::Button("Entities", ImVec2(90, 25))) currentGUI = SHOW_GUI_ENTITIES;
-	ImGui::SameLine();
-	if (ImGui::Button("Lights", ImVec2(90, 25))) currentGUI = SHOW_GUI_LIGHTS;
-	ImGui::SameLine();
-	if (ImGui::Button("Camera", ImVec2(90, 25))) currentGUI = SHOW_GUI_CAMERA;
-
-	switch (currentGUI)
+	// Each scene has these settings
+	if (ImGui::TreeNode("Scene Objects"))
 	{
-	case SHOW_GUI_ENTITIES:
-		sceneGui->UpdateEntityGUI(scenes[currentScene]->GetEntities());
-		break;
-	case SHOW_GUI_LIGHTS:
-		sceneGui->UpdateLightGUI(scenes[currentScene]->GetLights(), scenes[currentScene]->GetLightToGizmos());
-		break;
-	case SHOW_GUI_CAMERA:
-		sceneGui->UpdateCameraGUI(scenes[currentScene]->GetAllCams(), scenes[currentScene].get(), (float)this->windowWidth, (float)this->windowHeight);
-		break;
-	default:
-		break;
+		
+		// What Scene specific informatino to display 
+		if (ImGui::Button("Entities", ImVec2(90, 25))) currentGUI = SHOW_GUI_ENTITIES;
+		ImGui::SameLine();
+		if (ImGui::Button("Lights", ImVec2(90, 25))) currentGUI = SHOW_GUI_LIGHTS;
+		ImGui::SameLine();
+		if (ImGui::Button("Cameras", ImVec2(90, 25))) currentGUI = SHOW_GUI_CAMERA;
+
+
+
+		switch (currentGUI)
+		{
+		case SHOW_GUI_ENTITIES:
+			sceneGui->UpdateEntityGUI(scenes[currentScene]->GetEntities());
+			break;
+		case SHOW_GUI_LIGHTS:
+			sceneGui->UpdateLightGUI(scenes[currentScene]->GetLights(), scenes[currentScene]->GetLightToGizmos());
+			break;
+		case SHOW_GUI_CAMERA:
+			sceneGui->UpdateCameraGUI(scenes[currentScene]->GetAllCams(), scenes[currentScene].get(), (float)this->windowWidth, (float)this->windowHeight);
+			break;
+		default:
+			break;
+		}
+
+
+		ImGui::TreePop();
+	}
+	
+
+	
+
+	// Animation Scene 
+	if (currentScene == SCENE_ANIM) // TODO - Change to be dynamically changeable
+	{
+		if (ImGui::TreeNode("Animation Controls"))
+		{
+			ImGui::TreePop();
+		}
 	}
 
-	ImGui::Dummy(ImVec2(0.0f, 20.0f));
-	int type = sceneGui->CreateCurveGuiWithDropDown();
+	
+	/*int type = sceneGui->CreateCurveGuiWithDropDown();*/
 }
 
 // --------------------------------------------------------
@@ -505,6 +597,16 @@ void Game::Update(float deltaTime, float totalTime)
 	float mouseLookSpeed = 2.0f; 
 
 	scene->GetCurrentCam()->Update(deltaTime);
+
+	switch (currentScene)
+	{
+	case SCENE_ANIM:
+		AnimSceneLogic(deltaTime);
+		break;
+	default:
+		break;
+	}
+	
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))

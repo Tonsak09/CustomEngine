@@ -13,6 +13,8 @@
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
 
 #include <memory>
+#include <thread>
+#include <algorithm>
 
 #include <vector>
 #include "Entity.h"
@@ -30,6 +32,7 @@
 #include "AnimCurves.h"
 #include "Scenes.h"
 #include "SceneGui.h"
+
 
 class Game 
 	: public DXCore
@@ -51,6 +54,10 @@ private:
 	void LoadShaders(); 
 	void CreateGeometry();
 	void CreateCameras();
+
+	// Logic specifically for animation demonstration
+	void AnimSceneLogic(float deltaTime);
+	void CreateMoveAnim(std::shared_ptr<DirectX::XMFLOAT3> pos, DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 target, float time, int curveType = 0);
 
 	// Gui - Used to tell the computer which gui to display 
 	void UpdateImGui(float deltaTime);

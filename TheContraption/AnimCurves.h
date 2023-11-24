@@ -35,6 +35,8 @@
 
 const float PI = 3.14159265358979323846f;
 
+
+
 static float EaseInSine(float x)
 {
 	return 1 - std::cos((x * PI) / 2.0f);
@@ -227,4 +229,75 @@ static float EaseInOutBounce(float x)
 	return x < 0.5f
 		? (1.0f - EaseOutBounce(1.0f - 2.0f * x)) / 2.0f
 		: (1.0f + EaseOutBounce(2.0f * x - 1.0f)) / 2.0f;
+}
+
+
+static float GetCurveByIndex(int curveType, float p)
+{
+	switch (curveType)
+	{
+	case EASE_IN_SINE:
+		return EaseInSine(p);
+	case EASE_OUT_SINE:
+		return EaseOutSine(p);
+	case EASE_IN_OUT_SINE:
+		return EaseInOutSine(p);
+	case EASE_IN_QUAD:
+		return EaseInQuad(p);
+	case EASE_OUT_QUAD:
+		return EaseOutQuad(p);
+	case EASE_IN_OUT_QUAD:
+		return EaseInOutQuad(p);
+	case EASE_IN_CUBIC:
+		return EaseInCubic(p);
+	case EASE_OUT_CUBIC:
+		return EaseOutCubic(p);
+	case EASE_IN_OUT_CUBIC:
+		return EaseInOutCubic(p);
+	case EASE_IN_QUART:
+		return EaseInQuart(p);
+	case EASE_OUT_QUART:
+		return EaseOutQuart(p);
+	case EASE_IN_OUT_QUART:
+		return EaseInOutQuart(p);
+	case EASE_IN_QUINT:
+		return EaseInQuint(p);
+	case EASE_OUT_QUINT:
+		return EaseOutQuint(p);
+	case EASE_IN_OUT_QUINT:
+		return EaseInOutQuint(p);
+	case EASE_IN_EXPO:
+		return EaseInExpo(p);
+	case EASE_OUT_EXPO:
+		return EaseOutExpo(p);
+	case EASE_IN_OUT_EXPO:
+		return EaseInOutExpo(p);
+	case EASE_IN_CIRC:
+		return EaseInCirc(p);
+	case EASE_OUT_CIRC:
+		return EaseOutCirc(p);
+	case EASE_IN_OUT_CIRC:
+		return EaseInOutCirc(p);
+	case EASE_IN_BACK:
+		return EaseInBack(p);
+	case EASE_OUT_BACK:
+		return EaseOutBack(p);
+	case EASE_IN_OUT_BACK:
+		return EaseInOutBack(p);
+	case EASE_IN_ELASTIC:
+		return EaseInElastic(p);
+	case EASE_OUT_ELASTIC:
+		return EaseOutElastic(p);
+	case EASE_IN_OUT_ELASTIC:
+		return EaseInOutElastic(p);
+	case EASE_IN_BOUNCE:
+		return EaseInBounce(p);
+	case EASE_OUT_BOUNCE:
+		return EaseOutBounce(p);
+	case EASE_IN_OUT_BOUNCE:
+		return EaseInOutBounce(p);
+	default:
+		return 1.0f;
+		break;
+	}
 }
