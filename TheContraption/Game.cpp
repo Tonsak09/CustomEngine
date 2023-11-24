@@ -43,10 +43,12 @@ Game::Game(HINSTANCE hInstance)
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 	scene = std::make_shared<Scene>();
-	//entities = std::vector<std::shared_ptr<Entity>>();
-	//cameras = std::vector<std::shared_ptr<Camera>>();
-	//currentCam = 0;
-	currentGUI = 0;
+	animScene = std::make_shared<Scene>();
+
+	scenes.push_back(scene);
+	scenes.push_back(animScene);
+
+	currentGUI = 0; currentScene = 0;
 
 #endif
 }
@@ -120,28 +122,60 @@ void Game::Init()
 /// </summary>
 void Game::LoadLights()
 {
+	#pragma region scene1
 	std::vector<std::shared_ptr<Light>> lights = std::vector<std::shared_ptr<Light>>();
+
+		directionalLight1 = {};
+		directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+		directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
+		directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
+		directionalLight1.intensity = 1.0;
+		lights.push_back(std::make_shared<Light>(directionalLight1));
+
+		directionalLight2 = {};
+		directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
+		directionalLight2.directiton = DirectX::XMFLOAT3(0, -1, 0);
+		directionalLight2.color = DirectX::XMFLOAT3(1, 1, 1);
+		directionalLight2.intensity = 1.0;
+		lights.push_back(std::make_shared<Light>(directionalLight2));
+
+		directionalLight3 = {};
+		directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
+		directionalLight3.directiton = DirectX::XMFLOAT3(-0.2f, 1, 0);
+		directionalLight3.color = DirectX::XMFLOAT3(0, 1, 0);
+		directionalLight3.intensity = 1.0;
+		lights.push_back(std::make_shared<Light>(directionalLight3));
+
+		pointLight1 = {};
+		pointLight1.type = LIGHT_TYPE_POINT;
+		pointLight1.position = DirectX::XMFLOAT3(2, 2, 0);
+		pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
+		pointLight1.intensity = 1.0;
+		pointLight1.range = 40.0;
+		lights.push_back(std::make_shared<Light>(pointLight1));
+
+		pointLight2 = {};
+		pointLight2.type = LIGHT_TYPE_POINT;
+		pointLight2.position = DirectX::XMFLOAT3(1, -3, 0);
+		pointLight2.color = DirectX::XMFLOAT3(0, 0, 1);
+		pointLight2.intensity = 1.0;
+		pointLight2.range = 100.0;
+		lights.push_back(std::make_shared<Light>(pointLight2));
+
+		// Set the scene's lights 
+		scene->SetLights(lights);
+	#pragma endregion
+
+
+
+	std::vector<std::shared_ptr<Light>> lights2 = std::vector<std::shared_ptr<Light>>();
 
 	directionalLight1 = {};
 	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 	directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 	directionalLight1.intensity = 1.0;
-	lights.push_back(std::make_shared<Light>(directionalLight1));
-
-	directionalLight2 = {};
-	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight2.directiton = DirectX::XMFLOAT3(0, -1, 0);
-	directionalLight2.color = DirectX::XMFLOAT3(1, 1, 1);
-	directionalLight2.intensity = 1.0;
-	lights.push_back(std::make_shared<Light>(directionalLight2));
-
-	directionalLight3 = {};
-	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight3.directiton = DirectX::XMFLOAT3(-0.2f, 1, 0);
-	directionalLight3.color = DirectX::XMFLOAT3(0, 1, 0);
-	directionalLight3.intensity = 1.0;
-	lights.push_back(std::make_shared<Light>(directionalLight3));
+	lights2.push_back(std::make_shared<Light>(directionalLight1));
 
 	pointLight1 = {};
 	pointLight1.type = LIGHT_TYPE_POINT;
@@ -149,18 +183,10 @@ void Game::LoadLights()
 	pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
 	pointLight1.intensity = 1.0;
 	pointLight1.range = 40.0;
-	lights.push_back(std::make_shared<Light>(pointLight1));
-
-	pointLight2 = {};
-	pointLight2.type = LIGHT_TYPE_POINT;
-	pointLight2.position = DirectX::XMFLOAT3(1, -3, 0);
-	pointLight2.color = DirectX::XMFLOAT3(0, 0, 1);
-	pointLight2.intensity = 1.0;
-	pointLight2.range = 100.0;
-	lights.push_back(std::make_shared<Light>(pointLight2));
+	lights2.push_back(std::make_shared<Light>(pointLight1));
 
 	// Set the scene's lights 
-	scene->SetLights(lights);
+	animScene->SetLights(lights2);
 }
 
 void Game::SetupLitMaterial(
@@ -295,6 +321,7 @@ void Game::CreateGeometry()
 		);
 
 	scene->SetSky(sky);
+	animScene->SetSky(sky);
 
 	// Create materials 
 	SetupLitMaterial(
@@ -346,6 +373,13 @@ void Game::CreateGeometry()
 	// Put all into scene(s)
 	scene->SetEntities(entities);
 	scene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+
+
+
+	std::vector<std::shared_ptr<Entity>> entities2 = std::vector<std::shared_ptr<Entity>>();
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+	animScene->SetEntities(entities2);
+	animScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 }
 
 
@@ -391,6 +425,7 @@ void Game::CreateCameras()
 		));
 
 	scene->SetCameras(cameras);
+	animScene->SetCameras(cameras);
 }
 
 // --------------------------------------------------------
@@ -431,6 +466,10 @@ void Game::UpdateImGui(float deltaTime)
 	ImGui::Text("Window Width: %i", windowWidth);
 	ImGui::Text("Window Height: %i", windowHeight);
 
+	// Scenes 
+	sceneGui->CreateSceneGui(scenes, &currentScene);
+	ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
 	// Buttons 
 	if (ImGui::Button("Entities", ImVec2(90, 25))) currentGUI = SHOW_GUI_ENTITIES;
 	ImGui::SameLine();
@@ -438,22 +477,22 @@ void Game::UpdateImGui(float deltaTime)
 	ImGui::SameLine();
 	if (ImGui::Button("Camera", ImVec2(90, 25))) currentGUI = SHOW_GUI_CAMERA;
 
-
 	switch (currentGUI)
 	{
 	case SHOW_GUI_ENTITIES:
-		sceneGui->UpdateEntityGUI(scene->GetEntities());
+		sceneGui->UpdateEntityGUI(scenes[currentScene]->GetEntities());
 		break;
 	case SHOW_GUI_LIGHTS:
-		sceneGui->UpdateLightGUI(scene->GetLights(), scene->GetLightToGizmos());
+		sceneGui->UpdateLightGUI(scenes[currentScene]->GetLights(), scenes[currentScene]->GetLightToGizmos());
 		break;
 	case SHOW_GUI_CAMERA:
-		sceneGui->UpdateCameraGUI(scene->GetAllCams(), scene.get(), (float)this->windowWidth, (float)this->windowHeight);
+		sceneGui->UpdateCameraGUI(scenes[currentScene]->GetAllCams(), scenes[currentScene].get(), (float)this->windowWidth, (float)this->windowHeight);
 		break;
 	default:
 		break;
 	}
 
+	ImGui::Dummy(ImVec2(0.0f, 20.0f));
 	int type = sceneGui->CreateCurveGuiWithDropDown();
 }
 
@@ -489,11 +528,23 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->ClearDepthStencilView(depthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	scene->DrawEntities(context);
-	scene->DrawLightsGui(context);
-	scene->DrawSky(context);
-	
 
+	if (currentScene <= 0 || currentScene >= scenes.size())
+	{
+		// Default scene 
+		scene->DrawEntities(context);
+		scene->DrawLightsGui(context);
+		scene->DrawSky(context);
+	}
+	else
+	{
+		scenes[currentScene]->DrawEntities(context);
+		scenes[currentScene]->DrawLightsGui(context);
+		scenes[currentScene]->DrawSky(context);
+	}
+
+	
+	
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)

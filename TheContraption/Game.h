@@ -4,8 +4,9 @@
 #define SHOW_GUI_LIGHTS 1
 #define SHOW_GUI_CAMERA 2
 
-#define SCENE_MAT_TEST 0
-#define SCENE_DECONSTRUCTION 1
+// Scenes 
+#define SCENE_PRIMARY 0
+#define SCENE_ANIM 1
 
 #include "DXCore.h"
 #include <DirectXMath.h>
@@ -115,9 +116,19 @@ private:
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
+	
 
-	std::shared_ptr<Scene> scene;
+	// Primary Scene 
+	std::shared_ptr<Scene> scene; 
 	// Debug info 
-	std::shared_ptr<SceneGui> sceneGui; 
-};
+	std::shared_ptr<SceneGui> sceneGui;
 
+	// Animation Testing Scene 
+	std::shared_ptr<Scene> animScene;
+	std::shared_ptr<SceneGui> animSceneGui;
+
+	int currentScene;
+	std::vector<std::shared_ptr<Scene>> scenes;
+	std::vector<std::shared_ptr<SceneGui>> sceneGuis;
+
+};

@@ -65,6 +65,23 @@ void SceneGui::CreatePointLightGui(Light* light)
 	if (ImGui::DragFloat("Range", &range, 0.01f)) light->range = range;
 }
 
+void SceneGui::CreateSceneGui(std::vector<std::shared_ptr<Scene>> scenes, int* currentScene)
+{
+	// Display each scene 
+	if (ImGui::TreeNode("Scenes"))
+	{
+		for (unsigned int i = 0; i < scenes.size(); i++)
+		{
+			ImGui::PushID(i);
+			if (ImGui::Button("Scene", ImVec2(90, 25))) *currentScene = i;
+			ImGui::PopID();
+		}
+
+		ImGui::TreePop();
+	}
+	
+}
+
 void SceneGui::UpdateLightGUI(std::vector<std::shared_ptr<Light>> lights, std::unordered_map<Light*, Entity*> lightToGizmos)
 {
 	// Display Light GUI

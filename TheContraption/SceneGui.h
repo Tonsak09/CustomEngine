@@ -29,6 +29,7 @@ public:
 	void CreateLightGui(Light* light, Entity* lightGui);
 	void CreateDirLightGui(Light* light);
 	void CreatePointLightGui(Light* light);
+	void CreateSceneGui(std::vector<std::shared_ptr<Scene>> scenes, int* currentScene);
 
 	/// <summary>
 	/// Interact with adjustable settings for given camera
