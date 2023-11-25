@@ -33,6 +33,7 @@
 #include "Scenes.h"
 #include "SceneGui.h"
 
+#include "BasicAnimation.h"
 
 class Game 
 	: public DXCore
@@ -57,7 +58,6 @@ private:
 
 	// Logic specifically for animation demonstration
 	void AnimSceneLogic(float deltaTime);
-	void CreateMoveAnim(std::shared_ptr<DirectX::XMFLOAT3> pos, DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 target, float time, int curveType = 0);
 
 	// Gui - Used to tell the computer which gui to display 
 	void UpdateImGui(float deltaTime);
@@ -133,7 +133,10 @@ private:
 	// Animation Testing Scene 
 	std::shared_ptr<Scene> animScene;
 	std::shared_ptr<SceneGui> animSceneGui;
+	std::shared_ptr<BasicAnimationManager> animManager;
+	bool startAnimation; // Whether to start animation or not 
 
+	// Scene Mangement 
 	int currentScene;
 	std::vector<std::shared_ptr<Scene>> scenes;
 	std::vector<std::shared_ptr<SceneGui>> sceneGuis;

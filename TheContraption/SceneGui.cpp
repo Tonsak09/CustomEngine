@@ -5,7 +5,7 @@ SceneGui::SceneGui(){}
 
 void SceneGui::CreateEntityGui(std::shared_ptr<Entity> entity)
 {
-	Transform* trans = entity->GetTransform();
+	std::shared_ptr <Transform> trans = entity->GetTransform();
 	XMFLOAT3 pos = *(trans->GetPosition().get());
 	XMFLOAT3 rot = trans->GetEulerRotation();
 	XMFLOAT3 sca = trans->GetScale();

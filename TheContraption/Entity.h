@@ -12,7 +12,7 @@
 class Entity
 {
 private:
-	Transform transform;
+	std::shared_ptr <Transform> transform;
 	std::shared_ptr<Mesh> model;
 	std::shared_ptr<Material> mat;
 	
@@ -20,7 +20,7 @@ public:
 	Entity(std::shared_ptr<Mesh> model, std::shared_ptr<Material> mat);
 
 	std::shared_ptr<Mesh> GetModel();
-	Transform* GetTransform();
+	std::shared_ptr <Transform> GetTransform();
 	std::shared_ptr<Material> GetMat();
 	void SetMat(std::shared_ptr<Material> nextMat);
 

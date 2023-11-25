@@ -44,11 +44,12 @@ Game::Game(HINSTANCE hInstance)
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 	scene = std::make_shared<Scene>();
 	animScene = std::make_shared<Scene>();
+	animManager = std::make_shared<BasicAnimationManager>();
 
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
 
-	currentGUI = 0; currentScene = 0;
+	currentGUI = 0; currentScene = 1;
 
 #endif
 }
@@ -428,17 +429,6 @@ void Game::CreateCameras()
 	animScene->SetCameras(cameras);
 }
 
-void Game::CreateMoveAnim(
-	std::shared_ptr<DirectX::XMFLOAT3> pos,				// Vec3 that is being moved 
-	DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 target,	// Start and target position
-	float time,											// Amount of time animtion will take 
-	int curveType)										// Animation curve to follow 
-{
-	float lerp = 0.0f;
-
-	
-}
-
 void Game::AnimSceneLogic(float deltaTime)
 {
 	//deltaTime /= 100.0f;
@@ -451,43 +441,30 @@ void Game::AnimSceneLogic(float deltaTime)
 	static float timer = 0.0f;
 
 	static float time = 2.0f;
-	static int curveType = EASE_IN_BOUNCE;
+	static int curveType = EASE_IN_CUBIC;
 
 
 	static DirectX::XMFLOAT3 inPos(-5, 0, 0);
 	static DirectX::XMFLOAT3 outPos(5, 0, 0);
 
-	// TODO - Make global so imgui can access 
-	// When button is pressed and needs to begin animation 
-	static bool needsChange = true;
-
-
-	if (needsChange)
+	if (startAnimation)
 	{
 		// Setup for animation 
-		needsChange = false;
+		startAnimation = false;
 		inAnimation = true;
 
-		//startPos = *animScene->GetEntities()[0]->GetTransform()->GetPosition();
+		animManager->AddAnimation(
+			animScene->GetEntities()[0]->GetTransform(),
+			isSplit ? inPos : outPos,
+			isSplit ? outPos : inPos,
+			time,
+			curveType
+		);
 	}
 	else if (inAnimation)
 	{
-		if (isSplit)
-		{
-			// Bring back together 
-			DirectX::XMFLOAT3 current;
-			DirectX::XMStoreFloat3(
-				&current,											
-				DirectX::XMLoadFloat3(&inPos) + (DirectX::XMLoadFloat3(&outPos) - DirectX::XMLoadFloat3(&inPos)) * GetCurveByIndex(curveType, timer / time));	// Unclamped Lerp 
-
-			animScene->GetEntities()[0]->GetTransform()->SetPosition(current); // Store 
-			timer += deltaTime;
-			
-		}
-		else
-		{
-			// Set apart 
-		}
+		startAnimation = false;
+		timer += deltaTime;
 
 		// Animation is complete 
 		if (timer > time)
@@ -580,6 +557,7 @@ void Game::UpdateImGui(float deltaTime)
 	{
 		if (ImGui::TreeNode("Animation Controls"))
 		{
+			if (ImGui::Button("Animate", ImVec2(90, 25))) startAnimation = true;
 			ImGui::TreePop();
 		}
 	}
@@ -597,6 +575,7 @@ void Game::Update(float deltaTime, float totalTime)
 	float mouseLookSpeed = 2.0f; 
 
 	scene->GetCurrentCam()->Update(deltaTime);
+	animManager->UpdateAnimations(deltaTime);
 
 	switch (currentScene)
 	{

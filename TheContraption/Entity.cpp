@@ -5,7 +5,7 @@
 Entity::Entity(std::shared_ptr<Mesh> model, std::shared_ptr<Material> mat) :
 	model(model), mat(mat)
 {
-	transform = Transform();
+	transform = std::make_shared<Transform>();
 }
 
 std::shared_ptr<Mesh> Entity::GetModel()
@@ -13,9 +13,9 @@ std::shared_ptr<Mesh> Entity::GetModel()
 	return model;
 }
 
-Transform* Entity::GetTransform() 
+std::shared_ptr <Transform> Entity::GetTransform()
 { 
-	return &transform; 
+	return transform; 
 }
 
 std::shared_ptr<Material> Entity::GetMat()
@@ -38,10 +38,10 @@ void Entity::Draw(
 
 	std::shared_ptr<SimpleVertexShader> vs = mat->GetVertexShader();
 	vs->SetFloat4("colorTint", mat->GetTint());
-	vs->SetMatrix4x4("world", transform.GetWorldMatrix()); 
+	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); 
 	vs->SetMatrix4x4("viewMatrix", *camera->GetViewMatrix().get()); 
 	vs->SetMatrix4x4("projMatrix", *camera->GetProjMatrix().get()); 
-	vs->SetMatrix4x4("worldInvTranspose", transform.GetWorldInverseTransposeMatrix());
+	vs->SetMatrix4x4("worldInvTranspose", transform->GetWorldInverseTransposeMatrix());
 
 	vs->CopyAllBufferData();
 
@@ -71,7 +71,7 @@ void Entity::Draw(
 
 	std::shared_ptr<SimpleVertexShader> vs = mat->GetVertexShader();
 	//vs->SetFloat4("colorTint", mat->GetTint()); // Strings here MUST
-	vs->SetMatrix4x4("world", transform.GetWorldMatrix()); // match variable
+	vs->SetMatrix4x4("world", transform->GetWorldMatrix()); // match variable
 	vs->SetMatrix4x4("viewMatrix", *camera->GetViewMatrix().get()); // names in your
 	vs->SetMatrix4x4("projMatrix", *camera->GetProjMatrix().get()); // shader’s cbuffer!
 
