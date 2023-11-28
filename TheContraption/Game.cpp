@@ -308,6 +308,18 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/torus.obj").c_str());
 	std::shared_ptr<Mesh> lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
 
+	// Setup mec eye 
+	std::shared_ptr<Mesh> connectionA = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/ConnectionA.obj").c_str());
+	std::shared_ptr<Mesh> connectionB = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/ConnectionB.obj").c_str());
+	std::shared_ptr<Mesh> connectionC = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/ConnectionC.obj").c_str());
+	std::shared_ptr<Mesh> Eye_Front = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/Eye_Front.obj").c_str());
+	std::shared_ptr<Mesh> Eye_Mid = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/Eye_Mid.obj").c_str());
+	std::shared_ptr<Mesh> Eye_Back = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/Eye_Back.obj").c_str());
+	std::shared_ptr<Mesh> HeatSink = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/HeatSink.obj").c_str());
+	std::shared_ptr<Mesh> Microchip = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/Microchip.obj").c_str());
+
+	#pragma region SETUP_MATERIALS
+
 	std::shared_ptr<Sky> sky = std::make_shared<Sky>(
 		device,
 		context,
@@ -359,6 +371,8 @@ void Game::CreateGeometry()
 		sky.get()
 	);
 	
+	#pragma endregion
+
 	std::vector<std::shared_ptr<Entity>> entities = std::vector<std::shared_ptr<Entity>>();
 
 	// Add all entites to the primary vector 
@@ -376,9 +390,14 @@ void Game::CreateGeometry()
 	scene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 
-
+	// Animation scene 
 	std::vector<std::shared_ptr<Entity>> entities2 = std::vector<std::shared_ptr<Entity>>();
-	entities2.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+	//entities2.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+
+
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(Microchip, schlickBronze)));
+
+
 	animScene->SetEntities(entities2);
 	animScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 }
@@ -440,7 +459,7 @@ void Game::AnimSceneLogic(float deltaTime)
 	// Use to transition between one pos to the next 
 	static float timer = 0.0f;
 
-	static float time = 2.0f;
+	static float time = 2.0f; // Longest time 
 	static int curveType = EASE_IN_CUBIC;
 
 

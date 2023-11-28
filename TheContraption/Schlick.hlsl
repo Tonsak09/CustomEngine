@@ -163,5 +163,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// 0.04f is recommended amount 
 	float3 finalColor = lerp(totalLight, reflectionColor, SimpleFresnel(input.normal, viewVector, 0.04f));
 
+	//return float4(input.uv, 0, 1);
 	return float4( pow(finalColor, 1.0f / 2.2f), 1); //float4(pow(finalColor, 1.0f / 2.2f), 1);
 }

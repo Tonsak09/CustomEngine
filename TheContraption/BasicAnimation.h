@@ -46,7 +46,13 @@ public:
 	BasicAnimationManager();
 	~BasicAnimationManager();
 
+	/// <summary>
+	///  Add a simple translation animation to this manager to organize 
+	/// </summary>
 	void AddAnimation(std::shared_ptr<Transform> target, DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end, float time, int curveType);
+	/// <summary>
+	/// Updates all active animation's held by this manager 
+	/// </summary>
 	void UpdateAnimations(float deltaTime);
 
 	//void RemoveAnimation(std::shared_ptr<DirectX::XMFLOAT3> target);
