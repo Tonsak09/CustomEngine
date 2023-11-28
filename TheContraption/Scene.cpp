@@ -1,12 +1,13 @@
 #include "Scenes.h"
 
 Scene::Scene(
+	std::string sceneTitle,
 	std::vector<std::shared_ptr<Camera>> cameras,
 	std::vector<std::shared_ptr<Entity>> entities,
 	std::vector<std::tuple<std::shared_ptr<Light>,std::shared_ptr<Entity>>> lightAndGui,
 	std::shared_ptr<Sky> sky
 ) :
-	cameras(cameras), entities(entities), lights(lights)
+	sceneTitle(sceneTitle), cameras(cameras), entities(entities), lights(lights)
 {
 	// Start of cameras vector 
 	currentCam = 0;
@@ -15,7 +16,8 @@ Scene::Scene(
 	SetLightsAndGui(lightAndGui);
 }
 
-Scene::Scene()
+Scene::Scene(std::string sceneTitle) :
+	sceneTitle(sceneTitle)
 {
 	currentCam = 0;
 
@@ -185,4 +187,9 @@ void Scene::ResizeCam(float windowWidth, float windowHeight)
 		DirectX::XM_PIDIV4,								// FOV 
 		windowWidth / windowHeight				// Aspect Ratio
 	);
+}
+
+std::string Scene::GetTitle()
+{
+	return sceneTitle;
 }

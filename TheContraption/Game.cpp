@@ -42,9 +42,9 @@ Game::Game(HINSTANCE hInstance)
 	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
-	scene = std::make_shared<Scene>();
+	scene = std::make_shared<Scene>("General");
 	sceneGui = std::make_shared<SceneGui>();
-	animScene = std::make_shared<Scene>();
+	animScene = std::make_shared<Scene>("Anim");
 	animSceneGui = std::make_shared<SceneGui>();
 	animManager = std::make_shared<BasicAnimationManager>();
 

@@ -84,7 +84,7 @@ void SceneGui::CreateSceneGui(std::vector<std::shared_ptr<Scene>> scenes, int* c
 		for (unsigned int i = 0; i < scenes.size(); i++)
 		{
 			ImGui::PushID(i);
-			if (ImGui::Button("Scene", ImVec2(90, 25))) *currentScene = i;
+			if (ImGui::Button(&scenes[i]->GetTitle()[0], ImVec2(90, 25))) *currentScene = i;
 			ImGui::PopID();
 		}
 

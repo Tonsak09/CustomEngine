@@ -6,6 +6,7 @@
 
 #include "SimpleShader.h"
 #include <DirectXMath.h>
+#include <string>
 
 /*
 	The purpose of the script is to hold individual scene data that 
@@ -18,6 +19,7 @@ struct Scene
 public:
 	
 	Scene(
+		std::string sceneTitle,
 		std::vector<std::shared_ptr<Camera>> cameras,
 		std::vector<std::shared_ptr<Entity>> entities,
 		// We pass in light and its gui at the same time so
@@ -26,7 +28,7 @@ public:
 		std::shared_ptr<Sky> sky
 	);
 
-	Scene();
+	Scene(std::string sceneTitle);
 
 	void DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawSky(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
@@ -56,6 +58,8 @@ public:
 	std::vector<std::shared_ptr<Camera>> GetAllCams();
 	std::shared_ptr<Camera> GetCurrentCam();
 
+	std::string GetTitle();
+
 private:
 	// World entities 
 	std::vector<std::shared_ptr<Entity>> entities;
@@ -70,4 +74,6 @@ private:
 	std::vector<std::shared_ptr<Light>> lights;
 	std::vector<std::shared_ptr<Entity>> lightGizmos;
 	std::unordered_map<Light*, Entity*> lightToGizmos; 
+
+	std::string sceneTitle;
 };
