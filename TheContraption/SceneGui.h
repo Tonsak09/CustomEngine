@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <unordered_map>
+#include <string>
 
 #include "Lights.h"
 #include "Entity.h"
@@ -16,6 +18,8 @@ class SceneGui
 {
 public:
 	SceneGui();
+	void InstructionsGUI();
+
 	void UpdateEntityGUI(std::vector<std::shared_ptr<Entity>> entities);
 	void UpdateLightGUI(std::vector<std::shared_ptr<Light>> lights, std::unordered_map<Light*, Entity*> lightToGizmos);
 	void UpdateCameraGUI(std::vector<std::shared_ptr<Camera>> cameras, Scene* scene, float screenWidth, float screenHeight);
@@ -45,8 +49,8 @@ public:
 	/// Create a curve gui that automatically creates the dropdown and will return the selected index 
 	/// </summary>
 	/// <returns>Selected index. See AnimCurves.h for defines</returns>
-	int CreateCurveGuiWithDropDown(float plotSizeX = 100.0f, float plotSizeY = 80.0f);
+	void CreateCurveGuiWithDropDown(const char* key, int* value, float plotSizeX = 100.0f, float plotSizeY = 80.0f);
 
 	private:
-
+		std::unordered_map<std::string, int> keyToEquation;
 };

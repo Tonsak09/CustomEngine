@@ -1,7 +1,18 @@
 #include "SceneGui.h"
 using namespace DirectX;
 
-SceneGui::SceneGui(){}
+SceneGui::SceneGui(){
+	keyToEquation = std::unordered_map<std::string, int>();
+}
+
+void SceneGui::InstructionsGUI()
+{
+	ImGui::Begin("Instructions");
+	ImGui::Text("This is an example of a render engine.");
+	ImGui::Text("In the animation scene you have control over a simple translation animation that opens and closes a sphere with some componenents insides");
+	ImGui::Text("The generic scene is used to for examples of the rendering ability of this engine and general testing");
+	ImGui::End();
+}
 
 void SceneGui::CreateEntityGui(std::shared_ptr<Entity> entity)
 {
@@ -79,7 +90,6 @@ void SceneGui::CreateSceneGui(std::vector<std::shared_ptr<Scene>> scenes, int* c
 
 		ImGui::TreePop();
 	}
-	
 }
 
 void SceneGui::UpdateLightGUI(std::vector<std::shared_ptr<Light>> lights, std::unordered_map<Light*, Entity*> lightToGizmos)
@@ -168,10 +178,9 @@ void SceneGui::CreateCurveGui(int curveType, float plotSizeX, float plotSizeY)
 	ImGui::PlotLines("AnimCurve", lines, 120, 0, (const char*)0, -0.24f, 1.25f, size);
 }
 
-int SceneGui::CreateCurveGuiWithDropDown(float plotSizeX, float plotSizeY)
+void SceneGui::CreateCurveGuiWithDropDown(const char* key, int *value, float plotSizeX, float plotSizeY)
 {
-
-	const char* items[] = {
+	static const char* items[] = {
 		"EaseInSine", "EaseOutSine", "EaseInOutSine",
 		"EaseInQuad", "EaseOutQuad", "EaseInOutQuad",
 		"EaseInCubic", "EaseOutCubic", "EaseInOutCubic",
@@ -183,22 +192,28 @@ int SceneGui::CreateCurveGuiWithDropDown(float plotSizeX, float plotSizeY)
 		"EaseInElastic", "EaseOutElastic", "EaseInOutElastic",
 		"EaseInBounce", "EaseOutBounce", "EaseInOutBounce",
 	};
-	static const char* current_item = items[0];
-	static int activeEquation = 0;
 
+	if (keyToEquation.find(key) == keyToEquation.end())
+	{
+		keyToEquation[key] = *value;
+	}
+
+	//const char* current_item = items[0];
+	//static int activeEquation = 0;
+	ImGui::PushItemWidth(100.0f);
 	// What type to display 
-	if (ImGui::BeginCombo("Equation", current_item)) // The second parameter is the label previewed before opening the combo.
+	if (ImGui::BeginCombo("Equation", items[keyToEquation[key]])) // The second parameter is the label previewed before opening the combo.
 	{
 		for (int n = 0; n < IM_ARRAYSIZE(items); n++)
 		{
-			bool is_selected = (current_item != items[n]); // New item 
+			bool is_selected = (items[keyToEquation[key]] != items[n]); // New item 
 			if (ImGui::Selectable(items[n], is_selected))
 			{
-				current_item = items[n];
+				keyToEquation[key] = n;
 				if (is_selected)
 				{
 					ImGui::SetItemDefaultFocus();
-					activeEquation = n;
+					//activeEquation = n;
 
 					break;
 				}
@@ -206,9 +221,10 @@ int SceneGui::CreateCurveGuiWithDropDown(float plotSizeX, float plotSizeY)
 		}
 		ImGui::EndCombo();
 	}
+	
+	CreateCurveGui(keyToEquation[key]);
 
-	CreateCurveGui(activeEquation);
-
-	return activeEquation;
+	*value = keyToEquation[key];
+	//return keyToEquation[key];
 }
 

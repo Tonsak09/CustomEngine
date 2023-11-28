@@ -43,13 +43,23 @@ Game::Game(HINSTANCE hInstance)
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 	scene = std::make_shared<Scene>();
+	sceneGui = std::make_shared<SceneGui>();
 	animScene = std::make_shared<Scene>();
+	animSceneGui = std::make_shared<SceneGui>();
 	animManager = std::make_shared<BasicAnimationManager>();
 
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
 
 	currentGUI = 0; currentScene = 1;
+	
+	// Defaults 
+	eyeSepTime = 1.5f;
+	eyeSepCurve = EASE_OUT_ELASTIC;
+	eyeComTime = 1.0f;
+	eyeComCurve = EASE_IN_BOUNCE;
+
+	buttonCooldown = 2.0f;
 
 #endif
 }
@@ -289,19 +299,10 @@ void Game::CreateGeometry()
 
 	// Creates the sampler 
 	device.Get()->CreateSamplerState(&sampDesc, sampler.GetAddressOf());
-
-
-	mat1 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 1.0f, DirectX::XMFLOAT2(0,0), vertexShader, customPShader);
-	mat2 = std::make_shared<Material>(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
-	mat3 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 0, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
-	lit = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
-	//litCushion = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
-
-	schlickBricks = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
-	schlickCushions = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
-	schlickBronze = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
 	
+	#pragma region MODELS
 
+	// General Models 
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
 	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/helix.obj").c_str());
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/cube.obj").c_str());
@@ -318,7 +319,19 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> HeatSink = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/HeatSink.obj").c_str());
 	std::shared_ptr<Mesh> Microchip = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/Microchip.obj").c_str());
 
+	#pragma endregion
+
 	#pragma region SETUP_MATERIALS
+
+	mat1 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, customPShader);
+	mat2 = std::make_shared<Material>(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
+	mat3 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 0, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
+	lit = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
+	//litCushion = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
+
+	schlickBricks = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
+	schlickCushions = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
+	schlickBronze = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
 
 	std::shared_ptr<Sky> sky = std::make_shared<Sky>(
 		device,
@@ -373,6 +386,8 @@ void Game::CreateGeometry()
 	
 	#pragma endregion
 
+	#pragma region GENERIC_SCENE_ENTITIES
+
 	std::vector<std::shared_ptr<Entity>> entities = std::vector<std::shared_ptr<Entity>>();
 
 	// Add all entites to the primary vector 
@@ -389,17 +404,29 @@ void Game::CreateGeometry()
 	scene->SetEntities(entities);
 	scene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
+	#pragma endregion
+
+	#pragma region ANIM_SCENE_ENTITIES
 
 	// Animation scene 
 	std::vector<std::shared_ptr<Entity>> entities2 = std::vector<std::shared_ptr<Entity>>();
 	//entities2.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 
 
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(connectionA, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(connectionB, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(connectionC, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(Eye_Front, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(Eye_Mid, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(Eye_Back, schlickBronze)));
+	entities2.push_back(std::shared_ptr<Entity>(new Entity(HeatSink, schlickBronze)));
 	entities2.push_back(std::shared_ptr<Entity>(new Entity(Microchip, schlickBronze)));
 
 
 	animScene->SetEntities(entities2);
 	animScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+
+	#pragma endregion
 }
 
 
@@ -453,46 +480,95 @@ void Game::AnimSceneLogic(float deltaTime)
 	//deltaTime /= 100.0f;
 
 	// Whether the object has been broken apart 
-	static bool isSplit = true;
-	// Whether the object is being animated or not 
-	static bool inAnimation = false;
-	// Use to transition between one pos to the next 
-	static float timer = 0.0f;
+	static bool isSplit = false;
 
-	static float time = 2.0f; // Longest time 
-	static int curveType = EASE_IN_CUBIC;
+	static DirectX::XMFLOAT3 rest	(0, 0,	0	);
+	static DirectX::XMFLOAT3 front	(0, 0,	1.0f);
+	static DirectX::XMFLOAT3 back	(0, 0, -1.0f);
+
+	if (animManager->IsRunningAnimations())
+	{
+		startAnimation = false;
+		return;
+	}
 
 
-	static DirectX::XMFLOAT3 inPos(-5, 0, 0);
-	static DirectX::XMFLOAT3 outPos(5, 0, 0);
-
-	if (startAnimation)
+	if (startAnimation) // Whether to begin the animation 
 	{
 		// Setup for animation 
 		startAnimation = false;
-		inAnimation = true;
 
-		animManager->AddAnimation(
-			animScene->GetEntities()[0]->GetTransform(),
-			isSplit ? inPos : outPos,
-			isSplit ? outPos : inPos,
-			time,
-			curveType
+		// Following sets up start and end animations for eye 
+
+		//animManager->AddAnimation( // ConnectionA
+		//	animScene->GetEntities()[0]->GetTransform(),
+		//	isSplit ? inPos : outPos,
+		//	isSplit ? outPos : inPos,
+		//	time,
+		//	curveType
+		//);
+
+		//animManager->AddAnimation( // ConnectionB
+		//	animScene->GetEntities()[1]->GetTransform(),
+		//	isSplit ? inPos : outPos,
+		//	isSplit ? outPos : inPos,
+		//	time,
+		//	curveType
+		//);
+
+		//animManager->AddAnimation( // ConnectionC
+		//	animScene->GetEntities()[2]->GetTransform(),
+		//	isSplit ? inPos : outPos,
+		//	isSplit ? outPos : inPos,
+		//	time,
+		//	curveType
+		//);
+
+
+		animManager->AddAnimation( // Eye_Front
+			animScene->GetEntities()[3]->GetTransform(),
+			isSplit ? front : rest,
+			isSplit ? rest : front,
+			isSplit ? eyeComTime : eyeSepTime,
+			isSplit ? eyeComCurve : eyeSepCurve
 		);
-	}
-	else if (inAnimation)
-	{
-		startAnimation = false;
-		timer += deltaTime;
 
-		// Animation is complete 
-		if (timer > time)
-		{
-			// Reset variables 
-			inAnimation = false;
-			isSplit = !isSplit;
-		}
+		//animManager->AddAnimation( // Eye_Mid
+		//	animScene->GetEntities()[4]->GetTransform(),
+		//	isSplit ? rest : outPos,
+		//	isSplit ? outPos : rest,
+		//	time,
+		//	curveType
+		//);
+
+		animManager->AddAnimation( // Eye_Back
+			animScene->GetEntities()[5]->GetTransform(),
+			isSplit ? back : rest,
+			isSplit ? rest : back,
+			isSplit ? eyeComTime : eyeSepTime,
+			isSplit ? eyeComCurve : eyeSepCurve
+		);
+
+		animManager->AddAnimation( // Heatsink
+			animScene->GetEntities()[6]->GetTransform(),
+			isSplit ? back : rest,
+			isSplit ? rest : back,
+			isSplit ? eyeComTime : eyeSepTime,
+			isSplit ? eyeComCurve : eyeSepCurve
+		);
+
+		animManager->AddAnimation( // Microchip
+			animScene->GetEntities()[7]->GetTransform(),
+			isSplit ? back : rest,
+			isSplit ? rest : back,
+			isSplit ? eyeComTime : eyeSepTime,
+			isSplit ? eyeComCurve : eyeSepCurve
+		);
+
+
+		isSplit = !isSplit;
 	}
+	
 }
 
 // --------------------------------------------------------
@@ -527,6 +603,7 @@ void Game::UpdateImGui(float deltaTime)
 	input.SetKeyboardCapture(io.WantCaptureKeyboard);
 	input.SetMouseCapture(io.WantCaptureMouse);
 
+
 	float frameRate = ImGui::GetIO().Framerate;
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
 		1000.0 / frameRate, frameRate);
@@ -535,6 +612,7 @@ void Game::UpdateImGui(float deltaTime)
 
 	// Scene Management
 	sceneGui->CreateSceneGui(scenes, &currentScene);
+	sceneGui->InstructionsGUI();
 
 	// Each scene has these settings
 	if (ImGui::TreeNode("Scene Objects"))
@@ -571,15 +649,39 @@ void Game::UpdateImGui(float deltaTime)
 
 	
 
-	// Animation Scene 
-	if (currentScene == SCENE_ANIM) // TODO - Change to be dynamically changeable
+	
+
+	switch (currentScene)
 	{
+	case SCENE_ANIM:
+
+		// Animation Scene 
 		if (ImGui::TreeNode("Animation Controls"))
 		{
 			if (ImGui::Button("Animate", ImVec2(90, 25))) startAnimation = true;
+			ImGui::Dummy(ImVec2(0, 10));
+
+			ImGui::PushID(0);
+			ImGui::Text("Seperation");
+			animSceneGui->CreateCurveGuiWithDropDown("Seperation", &eyeSepCurve);
+			ImGui::InputFloat("Animation Time", &eyeSepTime, 0.01f);
+			ImGui::PopID();
+
+			ImGui::PushID(1);
+			ImGui::Text("Combine");
+			animSceneGui->CreateCurveGuiWithDropDown("Combine", &eyeComCurve);
+			ImGui::InputFloat("Animation Time", &eyeComTime, 0.01f);
+			ImGui::PopID();
+
 			ImGui::TreePop();
 		}
+
+		break;
+	default:
+		break;
 	}
+
+
 
 	
 	/*int type = sceneGui->CreateCurveGuiWithDropDown();*/

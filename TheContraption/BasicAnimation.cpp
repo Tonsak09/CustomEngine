@@ -39,6 +39,11 @@ void BasicAnimationManager::UpdateAnimations(float deltaTime)
 	}
 }
 
+bool BasicAnimationManager::IsRunningAnimations()
+{
+	return animations.size() != 0;
+}
+
 #pragma endregion
 
 AnimDetails::AnimDetails(std::shared_ptr<Transform> target, DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end, float time, int curveType):
@@ -64,3 +69,5 @@ void AnimDetails::UpdateAnimation(float deltaTime)
 
 	timer += deltaTime;
 }
+
+

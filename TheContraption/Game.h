@@ -125,16 +125,35 @@ private:
 	Light pointLight2;
 	
 
+	/*
+		New scenes require both a scene and a sceneGui when
+		working within debug mode along with scene constructor
+		requirements.
+
+		Since not all items can be given into the constructor
+		easily we use setter functions to initialize our scene
+		piece by piece BEFORE we start drawing it 
+	*/
+
 	// Primary Scene 
 	std::shared_ptr<Scene> scene; 
-	// Debug info 
-	std::shared_ptr<SceneGui> sceneGui;
+	std::shared_ptr<SceneGui> sceneGui; // Debug info 
 
 	// Animation Testing Scene 
 	std::shared_ptr<Scene> animScene;
 	std::shared_ptr<SceneGui> animSceneGui;
 	std::shared_ptr<BasicAnimationManager> animManager;
 	bool startAnimation; // Whether to start animation or not 
+	float buttonCooldown;
+
+	// Seperate 
+	float eyeSepTime;
+	int eyeSepCurve;
+
+	// Combine 
+	float eyeComTime;
+	int eyeComCurve;
+
 
 	// Scene Mangement 
 	int currentScene;

@@ -54,6 +54,11 @@ public:
 	/// Updates all active animation's held by this manager 
 	/// </summary>
 	void UpdateAnimations(float deltaTime);
+	/// <summary>
+	/// Whether or not this manager is running any animations 
+	/// </summary>
+	/// <returns></returns>
+	bool IsRunningAnimations();
 
 	//void RemoveAnimation(std::shared_ptr<DirectX::XMFLOAT3> target);
 
