@@ -646,11 +646,10 @@ void Game::UpdateImGui(float deltaTime)
 		ImGui::TreePop();
 	}
 	
-
 	
 
 	
-
+	// Scene specific gui
 	switch (currentScene)
 	{
 	case SCENE_ANIM:

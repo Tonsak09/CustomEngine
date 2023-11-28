@@ -8,9 +8,10 @@ SceneGui::SceneGui(){
 void SceneGui::InstructionsGUI()
 {
 	ImGui::Begin("Instructions");
-	ImGui::Text("This is an example of a render engine.");
-	ImGui::Text("In the animation scene you have control over a simple translation animation that opens and closes a sphere with some componenents insides");
-	ImGui::Text("The generic scene is used to for examples of the rendering ability of this engine and general testing");
+
+	ImGui::TextWrapped("This is an example of a render engine.");
+	ImGui::TextWrapped("In the animation scene you have control over a simple translation animation that opens and closes a sphere with some componenents insides");
+	ImGui::TextWrapped("The generic scene is used to for examples of the rendering ability of this engine and general testing");
 	ImGui::End();
 }
 
