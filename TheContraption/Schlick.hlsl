@@ -35,10 +35,10 @@ float2 GetUV(VertexToPixel input)
 	return input.uv + uvOffset;
 }
 
-float3 GetAlbedo(VertexToPixel input)
+float4 GetAlbedo(VertexToPixel input)
 {
-	float3 surfaceColor = Albedo.Sample(BasicSampler, GetUV(input)).rgb;
-	return pow(surfaceColor.rgb, 2.2f);
+	float4 surfaceColor = Albedo.Sample(BasicSampler, GetUV(input));
+	return surfaceColor;//pow(surfaceColor.rgb, 2.2f);
 }
 
 float GetRoughness(VertexToPixel input)
@@ -122,7 +122,16 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	// Sample textures   
-	float3 albedo = GetAlbedo(input);
+	float4 albedo = GetAlbedo(input);
+	
+	if (albedo.a < 0.1)
+	{
+		discard;
+	}
+
+	return albedo;
+
+
 	float roughness = GetRoughness(input);
 	float metalness = GetMetalness(input);
 	float3 specColor = GetSpec(input);
