@@ -7,6 +7,7 @@
 // Scenes 
 #define SCENE_PRIMARY 0
 #define SCENE_ANIM 1
+#define SCENE_SHADOWS 2
 
 #include "DXCore.h"
 #include <DirectXMath.h>
@@ -135,13 +136,25 @@ private:
 		piece by piece BEFORE we start drawing it 
 	*/
 
+	
+	
+
+
+	// Scene Mangement 
+	int currentScene;
+	std::vector<std::shared_ptr<Scene>> scenes;
+	std::vector<std::shared_ptr<SceneGui>> sceneGuis;
+
 	// Primary Scene 
-	std::shared_ptr<Scene> scene; 
+	std::shared_ptr<Scene> scene;
 	std::shared_ptr<SceneGui> sceneGui; // Debug info 
+	
+	#pragma region ANIMATION_SCENE
 
 	// Animation Testing Scene 
 	std::shared_ptr<Scene> animScene;
 	std::shared_ptr<SceneGui> animSceneGui;
+
 	std::shared_ptr<BasicAnimationManager> animManager;
 	bool startAnimation; // Whether to start animation or not 
 	float buttonCooldown;
@@ -153,11 +166,9 @@ private:
 	// Combine 
 	float eyeComTime;
 	int eyeComCurve;
+	#pragma endregion
 
-
-	// Scene Mangement 
-	int currentScene;
-	std::vector<std::shared_ptr<Scene>> scenes;
-	std::vector<std::shared_ptr<SceneGui>> sceneGuis;
-
+	// Shadow Scene 
+	std::shared_ptr<Scene> shadowScene;
+	std::shared_ptr<SceneGui> shadowSceneGui;
 };

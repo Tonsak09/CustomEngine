@@ -42,16 +42,22 @@ Game::Game(HINSTANCE hInstance)
 	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
+
 	scene = std::make_shared<Scene>("General");
 	sceneGui = std::make_shared<SceneGui>();
+
 	animScene = std::make_shared<Scene>("Anim");
 	animSceneGui = std::make_shared<SceneGui>();
 	animManager = std::make_shared<BasicAnimationManager>();
 
+	shadowScene = std::make_shared<Scene>("Shadow");
+	shadowSceneGui = std::make_shared<SceneGui>();
+
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
+	scenes.push_back(shadowScene);
 
-	currentGUI = 0; currentScene = 1;
+	currentGUI = 0; currentScene = SCENE_SHADOWS;
 	
 	// Defaults 
 	eyeSepTime = 1.5f;
@@ -198,6 +204,26 @@ void Game::LoadLights()
 
 	// Set the scene's lights 
 	animScene->SetLights(lights2);
+
+
+	std::vector<std::shared_ptr<Light>> lights3 = std::vector<std::shared_ptr<Light>>();
+
+	directionalLight1 = {};
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, -0.5f);
+	directionalLight1.color = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	directionalLight1.intensity = 1.0;
+	lights3.push_back(std::make_shared<Light>(directionalLight1));
+
+	pointLight1 = {};
+	pointLight1.type = LIGHT_TYPE_POINT;
+	pointLight1.position = DirectX::XMFLOAT3(2, 2, 0);
+	pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
+	pointLight1.intensity = 0.5;
+	pointLight1.range = 10.0;
+	lights3.push_back(std::make_shared<Light>(pointLight1));
+
+	shadowScene->SetLights(lights3);
 }
 
 void Game::SetupLitMaterial(
@@ -307,6 +333,7 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/helix.obj").c_str());
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/cube.obj").c_str());
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/torus.obj").c_str());
+	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/quad_double_sided.obj").c_str());
 	std::shared_ptr<Mesh> lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
 
 	// Setup mec eye 
@@ -348,6 +375,7 @@ void Game::CreateGeometry()
 
 	scene->SetSky(sky);
 	animScene->SetSky(sky);
+	shadowScene->SetSky(sky);
 
 	// Create materials 
 	SetupLitMaterial(
@@ -427,6 +455,31 @@ void Game::CreateGeometry()
 	animScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 	#pragma endregion
+
+
+	#pragma region GENERIC_SCENE_ENTITIES
+
+	std::vector<std::shared_ptr<Entity>> shadowEntities = std::vector<std::shared_ptr<Entity>>();
+
+	// Add all entites to the primary vector 
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(helix, schlickBricks)));
+	shadowEntities[0]->GetTransform()->SetPosition(1.0f, 0.0f, 0.0f);
+
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+	shadowEntities[1]->GetTransform()->MoveRelative(5.0f, 0.0f, 0.0f);
+
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickCushions)));
+	shadowEntities[2]->GetTransform()->MoveRelative(-5.0f, 0.0f, 0.0f);
+	
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(quad, schlickCushions)));
+	shadowEntities[3]->GetTransform()->MoveRelative(0.0f, -2.0f, 0.0f);
+	shadowEntities[3]->GetTransform()->SetScale(DirectX::XMFLOAT3(10, 1, 10));
+
+	// Put all into scene(s)
+	shadowScene->SetEntities(shadowEntities);
+	shadowScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+
+	#pragma endregion
 }
 
 
@@ -473,6 +526,7 @@ void Game::CreateCameras()
 
 	scene->SetCameras(cameras);
 	animScene->SetCameras(cameras);
+	shadowScene->SetCameras(cameras);
 }
 
 void Game::AnimSceneLogic(float deltaTime)

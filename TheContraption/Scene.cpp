@@ -58,8 +58,8 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 
 				DirectX::XMStoreFloat(&distance, length);
 				// Don't add light if out of range 
-				if (light->range < distance)
-					continue;
+				/*if (light->range < distance)
+					continue;*/
 
 				name = "pointLight" + std::to_string(pLights);
 				pLights++;

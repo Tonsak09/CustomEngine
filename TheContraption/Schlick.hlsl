@@ -92,6 +92,12 @@ float3 DirLight(Light light, VertexToPixel input, float roughness, float metalne
 
 float3 PointLight(Light light, VertexToPixel input, float roughness, float metalness, float3 albedo, float3 specColor)
 {
+	float3 difference = light.position - input.worldPosition;
+	float mag = length(difference);
+
+	if (mag > light.range)
+		return float3(0, 0, 0);
+
 	float3 lightDir = normalize(light.position - input.worldPosition);
 	float3 V = normalize(camPos - input.worldPosition);
 
@@ -129,7 +135,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 		discard;
 	}
 
-	return albedo;
+	//return albedo;
 
 
 	float roughness = GetRoughness(input);
