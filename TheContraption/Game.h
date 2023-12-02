@@ -9,6 +9,8 @@
 #define SCENE_ANIM 1
 #define SCENE_SHADOWS 2
 
+#define SHADOW_MAP_RESOLUTION 1024
+
 #include "DXCore.h"
 #include <DirectXMath.h>
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
@@ -56,6 +58,7 @@ private:
 	void LoadShaders(); 
 	void CreateGeometry();
 	void CreateCameras();
+	void LoadShadowResources();
 
 	// Logic specifically for animation demonstration
 	void AnimSceneLogic(float deltaTime);
@@ -124,6 +127,13 @@ private:
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
+
+	#pragma region SHADOWS
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
+	DirectX::XMFLOAT4X4 shadowViewMatrix;
+	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	#pragma endregion
 	
 
 	/*
@@ -135,10 +145,6 @@ private:
 		easily we use setter functions to initialize our scene
 		piece by piece BEFORE we start drawing it 
 	*/
-
-	
-	
-
 
 	// Scene Mangement 
 	int currentScene;

@@ -529,6 +529,28 @@ void Game::CreateCameras()
 	shadowScene->SetCameras(cameras);
 }
 
+
+void Game::LoadShadowResources()
+{
+	// Create the actual texture that will be the shadow map
+	D3D11_TEXTURE2D_DESC shadowDesc = {};
+	shadowDesc.Width = SHADOW_MAP_RESOLUTION; // Ideally a power of 2 (like 1024)
+	shadowDesc.Height = SHADOW_MAP_RESOLUTION; // Ideally a power of 2 (like 1024)
+	shadowDesc.ArraySize = 1;
+	shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	shadowDesc.CPUAccessFlags = 0;
+	shadowDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowDesc.MipLevels = 1;
+	shadowDesc.MiscFlags = 0;
+	shadowDesc.SampleDesc.Count = 1;
+	shadowDesc.SampleDesc.Quality = 0;
+	shadowDesc.Usage = D3D11_USAGE_DEFAULT;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
+	device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
+
+	//ImGui::Image();
+}
+
 void Game::AnimSceneLogic(float deltaTime)
 {
 	//deltaTime /= 100.0f;
