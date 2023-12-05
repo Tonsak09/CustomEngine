@@ -151,7 +151,7 @@ void Game::LoadLights()
 		directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 		directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 		directionalLight1.intensity = 1.0;
-		directionalLight1.hasShadows = false;
+		directionalLight1.hasShadows = true;
 		lights.push_back(std::make_shared<Light>(directionalLight1));
 
 		directionalLight2 = {};
@@ -201,7 +201,7 @@ void Game::LoadLights()
 	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 	directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 	directionalLight1.intensity = 1.0;
-	directionalLight1.hasShadows = false;
+	directionalLight1.hasShadows = true;
 	lights2.push_back(std::make_shared<Light>(directionalLight1));
 
 	pointLight1 = {};
@@ -604,13 +604,13 @@ void Game::LoadShadowResources()
 	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 }
 
-DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
-{
-	return XMMatrixLookToLH(
-		-DirectX::XMLoadFloat3(&light.directiton) * 20, // Position: "Backing up" 20 units from origin
-		DirectX::XMLoadFloat3(&light.directiton), // Direction: light's direction
-		XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
-}
+//DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
+//{
+//	return XMMatrixLookToLH(
+//		-DirectX::XMLoadFloat3(&light.directiton) * 20, // Position: "Backing up" 20 units from origin
+//		DirectX::XMLoadFloat3(&light.directiton), // Direction: light's direction
+//		XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
+//}
 
 void Game::AnimSceneLogic(float deltaTime)
 {
