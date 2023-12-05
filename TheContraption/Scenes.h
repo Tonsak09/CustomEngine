@@ -52,7 +52,6 @@ public:
 	void SetLightsAndGui(std::vector<std::tuple<std::shared_ptr<Light>, std::shared_ptr<Entity>>> lightAndGui);
 	void SetLights(std::vector<std::shared_ptr<Light>> lights);
 	void SetSky(std::shared_ptr<Sky> sky);
-	void LoadShadowResources();
 
 
 	void ResizeCam(float windowWidth, float windowHeight);

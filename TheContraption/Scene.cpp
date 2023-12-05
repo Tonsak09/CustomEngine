@@ -101,11 +101,11 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 				name = "directionalLight" + std::to_string(dLights);
 
 				// Shadow setting 
-				if (l == 0)
+				if (dLights == 1) // TODO CHANGE TO BE MORE DYNAMIC
 				{
 					entities[i]->GetMat()->GetVertexShader()->SetMatrix4x4("lightView", lightToShadowData[light]->view);
 					entities[i]->GetMat()->GetVertexShader()->SetMatrix4x4("lightProjection", lightToShadowData[light]->projection);
-
+					entities[i]->GetMat()->AddTextureSRV("ShadowMap", shadowSRV);
 				}
 
 				dLights++;
