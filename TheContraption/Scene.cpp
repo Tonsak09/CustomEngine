@@ -26,6 +26,53 @@ Scene::Scene(std::string sceneTitle) :
 
 }
 
+void Scene::DrawShadows(
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, 
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> backBufferRTV,
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthBufferDSV,
+	std::shared_ptr<SimpleVertexShader> shadowVS, 
+	int shadowMapResolution,
+	float windowWidth, float windowHeight)
+{
+	// Clear shadowmap
+	context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	// Setup output merger
+	ID3D11RenderTargetView* nullRTV{};
+	context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
+
+	// Deactivate pixel shader 
+	context->PSSetShader(0, 0, 0);
+
+	// Change viewport 
+	D3D11_VIEWPORT viewport = {};
+	viewport.Width = (float)shadowMapResolution;
+	viewport.Height = (float)shadowMapResolution;
+	viewport.MaxDepth = 1.0f;
+	context->RSSetViewports(1, &viewport);
+
+	// TODO ---------------------------------------------------------------------------------- FIND WAY TO CHOOSE DIRECTIONAL LIGHT THAT WORKS AND NOT JUST 0
+	// Entity Render Loop
+	shadowVS->SetShader();
+	shadowVS->SetMatrix4x4("view", lightToShadowData[lights[0].get()]->view);
+	shadowVS->SetMatrix4x4("projection", lightToShadowData[lights[0].get()]->projection);
+	// Loop and draw all entities
+	for (auto& e : entities)
+	{
+		shadowVS->SetMatrix4x4("world", e->GetTransform()->GetWorldMatrix());
+		shadowVS->CopyAllBufferData();
+		e->GetModel()->Draw();
+	}
+
+	// Reset pipeline
+	viewport.Width = windowWidth;
+	viewport.Height = windowHeight;
+	context->RSSetViewports(1, &viewport);
+	context->OMSetRenderTargets(
+		1,
+		backBufferRTV.GetAddressOf(),
+		depthBufferDSV.Get());
+}
 
 void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 {
@@ -33,6 +80,8 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 	{
 		DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
 		entities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
+		
+		
 
 
 		// For point light 
@@ -50,6 +99,15 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 			{
 			case LIGHT_TYPE_DIRECTIONAL:
 				name = "directionalLight" + std::to_string(dLights);
+
+				// Shadow setting 
+				if (l == 0)
+				{
+					entities[i]->GetMat()->GetVertexShader()->SetMatrix4x4("lightView", lightToShadowData[light]->view);
+					entities[i]->GetMat()->GetVertexShader()->SetMatrix4x4("lightProjection", lightToShadowData[light]->projection);
+
+				}
+
 				dLights++;
 				break;
 			case  LIGHT_TYPE_POINT:
@@ -133,17 +191,22 @@ void Scene::SetLights(std::vector<std::shared_ptr<Light>> lights)
 			lightToShadowData[lights[i].get()] = std::make_shared<ShadadowShaderData>();
 		
 		// Update view matrix 
-		lightToShadowData[lights[i].get()].get()->view = XMMatrixLookToLH(
-			-DirectX::XMLoadFloat3(&lights[i].get()->directiton) * 20, // Position: "Backing up" 20 units from origin
-			DirectX::XMLoadFloat3(&lights[i].get()->directiton), // Direction: light's direction
-			XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
+		
+		DirectX::XMStoreFloat4x4(
+			&lightToShadowData[lights[i].get()].get()->view, // Storing 
+			XMMatrixLookToLH(
+				-DirectX::XMLoadFloat3(&lights[i].get()->directiton) * 5, // Position: "Backing up" 20 units from origin
+				DirectX::XMLoadFloat3(&lights[i].get()->directiton), // Direction: light's direction
+				XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis)
 
 		// Set projection
-		lightToShadowData[lights[i].get()].get()->projection = XMMatrixOrthographicLH(
-			LIGHT_PROJ_SIZE,
-			LIGHT_PROJ_SIZE,
-			1.0f,
-			100.0f);
+		DirectX::XMStoreFloat4x4(
+			&lightToShadowData[lights[i].get()].get()->projection, // Storing 
+			XMMatrixOrthographicLH(
+				LIGHT_PROJ_SIZE,
+				LIGHT_PROJ_SIZE,
+				1.0f,
+				100.0f));
 
 	}
 }

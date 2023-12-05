@@ -106,6 +106,7 @@ private:
 	std::shared_ptr<SimplePixelShader> schlickShader;
 	std::shared_ptr<SimplePixelShader> customPShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
+	std::shared_ptr<SimpleVertexShader> shadowVS;
 
 	// Materials 
 	std::shared_ptr<Material> mat1;
@@ -135,10 +136,9 @@ private:
 	Light pointLight2;
 
 	#pragma region SHADOWS
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
-	DirectX::XMFLOAT4X4 shadowViewMatrix;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	
+	//DirectX::XMFLOAT4X4 shadowViewMatrix;
+	//DirectX::XMFLOAT4X4 shadowProjectionMatrix;
 	#pragma endregion
 	
 

@@ -73,17 +73,19 @@ void SceneGui::CreateDirLightGui(Light* light)
 	XMFLOAT3 direction = light->directiton;
 	if (ImGui::DragFloat3("Direction", &direction.x, 0.01f))
 	{
+		// Change has occured 
+
 		light->directiton = direction;
 
 		if (!light->hasShadows)
 			return;
 
-		scene->GetShadowData(light).get()->view = XMMatrixLookToLH(
-			-DirectX::XMLoadFloat3(&light->directiton) * 20, // Position: "Backing up" 20 units from origin
-			DirectX::XMLoadFloat3(&light->directiton), // Direction: light's direction
-			XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
-
-		
+		DirectX::XMStoreFloat4x4(
+			&scene->GetShadowData(light).get()->view,
+			XMMatrixLookToLH(
+				-DirectX::XMLoadFloat3(&light->directiton) * 20, // Position: "Backing up" 20 units from origin
+				DirectX::XMLoadFloat3(&light->directiton), // Direction: light's direction
+				XMVectorSet(0, 1, 0, 0))); // Up: World up vector (Y axis)
 	}
 }
 
@@ -107,6 +109,11 @@ void SceneGui::CreateSceneGui(std::vector<std::shared_ptr<Scene>> scenes, int* c
 
 		ImGui::TreePop();
 	}
+}
+
+void SceneGui::CreateShadowGui()
+{
+	ImGui::Image(scene->shadowSRV.Get(), ImVec2(512, 512));
 }
 
 void SceneGui::UpdateLightGUI(std::vector<std::shared_ptr<Light>> lights, std::unordered_map<Light*, Entity*> lightToGizmos)

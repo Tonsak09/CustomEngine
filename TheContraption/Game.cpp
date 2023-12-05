@@ -56,6 +56,10 @@ Game::Game(HINSTANCE hInstance)
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
 	scenes.push_back(shadowScene);
+	sceneGuis.push_back(sceneGui);
+	sceneGuis.push_back(animSceneGui);
+	sceneGuis.push_back(shadowSceneGui);
+
 
 	currentGUI = 0; currentScene = SCENE_SHADOWS;
 	
@@ -147,6 +151,7 @@ void Game::LoadLights()
 		directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 		directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 		directionalLight1.intensity = 1.0;
+		directionalLight1.hasShadows = false;
 		lights.push_back(std::make_shared<Light>(directionalLight1));
 
 		directionalLight2 = {};
@@ -154,6 +159,7 @@ void Game::LoadLights()
 		directionalLight2.directiton = DirectX::XMFLOAT3(0, -1, 0);
 		directionalLight2.color = DirectX::XMFLOAT3(1, 1, 1);
 		directionalLight2.intensity = 1.0;
+		directionalLight1.hasShadows = false;
 		lights.push_back(std::make_shared<Light>(directionalLight2));
 
 		directionalLight3 = {};
@@ -161,6 +167,7 @@ void Game::LoadLights()
 		directionalLight3.directiton = DirectX::XMFLOAT3(-0.2f, 1, 0);
 		directionalLight3.color = DirectX::XMFLOAT3(0, 1, 0);
 		directionalLight3.intensity = 1.0;
+		directionalLight1.hasShadows = false;
 		lights.push_back(std::make_shared<Light>(directionalLight3));
 
 		pointLight1 = {};
@@ -169,6 +176,7 @@ void Game::LoadLights()
 		pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
 		pointLight1.intensity = 1.0;
 		pointLight1.range = 40.0;
+		directionalLight1.hasShadows = false;
 		lights.push_back(std::make_shared<Light>(pointLight1));
 
 		pointLight2 = {};
@@ -177,6 +185,7 @@ void Game::LoadLights()
 		pointLight2.color = DirectX::XMFLOAT3(0, 0, 1);
 		pointLight2.intensity = 1.0;
 		pointLight2.range = 100.0;
+		directionalLight1.hasShadows = false;
 		lights.push_back(std::make_shared<Light>(pointLight2));
 
 		// Set the scene's lights 
@@ -184,7 +193,7 @@ void Game::LoadLights()
 	#pragma endregion
 
 
-
+	#pragma region AnimScene
 	std::vector<std::shared_ptr<Light>> lights2 = std::vector<std::shared_ptr<Light>>();
 
 	directionalLight1 = {};
@@ -192,7 +201,7 @@ void Game::LoadLights()
 	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 	directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 	directionalLight1.intensity = 1.0;
-
+	directionalLight1.hasShadows = false;
 	lights2.push_back(std::make_shared<Light>(directionalLight1));
 
 	pointLight1 = {};
@@ -201,30 +210,35 @@ void Game::LoadLights()
 	pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
 	pointLight1.intensity = 1.0;
 	pointLight1.range = 40.0;
+	directionalLight1.hasShadows = false;
 	lights2.push_back(std::make_shared<Light>(pointLight1));
 
 	// Set the scene's lights 
 	animScene->SetLights(lights2);
+	#pragma endregion
 
+	#pragma region ShadowScene
+	std::vector<std::shared_ptr<Light>> lightsShadow = std::vector<std::shared_ptr<Light>>();
 
-	std::vector<std::shared_ptr<Light>> lights3 = std::vector<std::shared_ptr<Light>>();
+	Light shadDir = {};
+	shadDir.type = LIGHT_TYPE_DIRECTIONAL;
+	shadDir.directiton = DirectX::XMFLOAT3(1, -1, -0.5f);
+	shadDir.color = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	shadDir.intensity = 1.0;
+	shadDir.hasShadows = true;
+	lightsShadow.push_back(std::make_shared<Light>(shadDir));
 
-	directionalLight1 = {};
-	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, -0.5f);
-	directionalLight1.color = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	directionalLight1.intensity = 1.0;
-	lights3.push_back(std::make_shared<Light>(directionalLight1));
+	Light shadPoint = {};
+	shadPoint.type = LIGHT_TYPE_POINT;
+	shadPoint.position = DirectX::XMFLOAT3(2, 2, 0);
+	shadPoint.color = DirectX::XMFLOAT3(0, 1, 0);
+	shadPoint.intensity = 0.5;
+	shadPoint.range = 10.0;
+	shadPoint.hasShadows = false;
+	lightsShadow.push_back(std::make_shared<Light>(shadPoint));
 
-	pointLight1 = {};
-	pointLight1.type = LIGHT_TYPE_POINT;
-	pointLight1.position = DirectX::XMFLOAT3(2, 2, 0);
-	pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
-	pointLight1.intensity = 0.5;
-	pointLight1.range = 10.0;
-	lights3.push_back(std::make_shared<Light>(pointLight1));
-
-	shadowScene->SetLights(lights3);
+	shadowScene->SetLights(lightsShadow);
+	#pragma endregion
 }
 
 void Game::SetupLitMaterial(
@@ -292,6 +306,8 @@ void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context,
 		FixPath(L"VertexShader.cso").c_str());
+	shadowVS = std::make_shared< SimpleVertexShader>(device, context,
+		FixPath(L"ShadowMapVertexShader.cso").c_str());
 	pixelShader = std::make_shared<SimplePixelShader>(device, context,
 		FixPath(L"PixelShader.cso").c_str());
 	customPShader = std::make_shared<SimplePixelShader>(device, context,
@@ -300,6 +316,7 @@ void Game::LoadShaders()
 		FixPath(L"litPS.cso").c_str());
 	schlickShader = std::make_shared< SimplePixelShader>(device, context,
 		FixPath(L"Schlick.cso").c_str());
+	
 }
 
 
@@ -549,7 +566,6 @@ void Game::LoadShadowResources()
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowTexture;
 	device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
 
-	//ImGui::Image();
 
 	// Create the depth/stencil view
 	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
@@ -559,7 +575,7 @@ void Game::LoadShadowResources()
 	device->CreateDepthStencilView(
 		shadowTexture.Get(),
 		&shadowDSDesc,
-		shadowDSV.GetAddressOf());
+		scenes[currentScene]->shadowDSV.GetAddressOf());
 
 	// Create the SRV for the shadow map
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -570,7 +586,7 @@ void Game::LoadShadowResources()
 	device->CreateShaderResourceView(
 		shadowTexture.Get(),
 		&srvDesc,
-		shadowSRV.GetAddressOf());
+		scenes[currentScene]->shadowSRV.GetAddressOf());
 }
 
 DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
@@ -735,14 +751,14 @@ void Game::UpdateImGui(float deltaTime)
 
 		switch (currentGUI)
 		{
-		case SHOW_GUI_ENTITIES:
-			sceneGui->UpdateEntityGUI(scenes[currentScene]->GetEntities());
+		case SHOW_GUI_ENTITIES:	
+			sceneGuis[currentScene]->UpdateEntityGUI(scenes[currentScene]->GetEntities());
 			break;
 		case SHOW_GUI_LIGHTS:
-			sceneGui->UpdateLightGUI(scenes[currentScene]->GetLights(), scenes[currentScene]->GetLightToGizmos());
+			sceneGuis[currentScene]->UpdateLightGUI(scenes[currentScene]->GetLights(), scenes[currentScene]->GetLightToGizmos());
 			break;
 		case SHOW_GUI_CAMERA:
-			sceneGui->UpdateCameraGUI(scenes[currentScene]->GetAllCams(), scenes[currentScene].get(), (float)this->windowWidth, (float)this->windowHeight);
+			sceneGuis[currentScene]->UpdateCameraGUI(scenes[currentScene]->GetAllCams(), scenes[currentScene].get(), (float)this->windowWidth, (float)this->windowHeight);
 			break;
 		default:
 			break;
@@ -752,8 +768,6 @@ void Game::UpdateImGui(float deltaTime)
 		ImGui::TreePop();
 	}
 	
-	
-
 	
 	// Scene specific gui
 	switch (currentScene)
@@ -781,6 +795,9 @@ void Game::UpdateImGui(float deltaTime)
 			ImGui::TreePop();
 		}
 
+		break;
+	case SCENE_SHADOWS:
+		shadowSceneGui->CreateShadowGui();
 		break;
 	default:
 		break;
@@ -839,12 +856,35 @@ void Game::Draw(float deltaTime, float totalTime)
 	if (currentScene <= 0 || currentScene >= scenes.size())
 	{
 		// Default scene 
+		/*scene->DrawShadows(
+			context, 
+			backBufferRTV,
+			depthBufferDSV,
+			shadowVS,
+			(float)this->windowWidth,
+			(float)this->windowHeight);*/
 		scene->DrawEntities(context);
 		scene->DrawLightsGui(context);
 		scene->DrawSky(context);
 	}
 	else
 	{
+		switch (currentScene)
+		{
+		case SCENE_SHADOWS:
+			scenes[currentScene]->DrawShadows(
+				context,
+				backBufferRTV,
+				depthBufferDSV,
+				shadowVS,
+				SHADOW_MAP_RESOLUTION,
+				(float)this->windowWidth,
+				(float)this->windowHeight);
+			break;
+		default:
+			break;
+		}
+		
 		scenes[currentScene]->DrawEntities(context);
 		scenes[currentScene]->DrawLightsGui(context);
 		scenes[currentScene]->DrawSky(context);

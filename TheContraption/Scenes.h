@@ -16,7 +16,7 @@
 	gui data for said scene 
 */
 
-#define LIGHT_PROJ_SIZE 15
+#define LIGHT_PROJ_SIZE 15.0f
 
 struct Scene
 {
@@ -34,6 +34,13 @@ public:
 
 	Scene(std::string sceneTitle);
 
+	void DrawShadows(
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context,
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> backBufferRTV,
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthBufferDSV,
+		std::shared_ptr<SimpleVertexShader> shadowVS,
+		int shadowResolutionSize,
+		float windowWidth, float windowHeight);
 	void DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawSky(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawLightsGui(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
@@ -45,6 +52,8 @@ public:
 	void SetLightsAndGui(std::vector<std::tuple<std::shared_ptr<Light>, std::shared_ptr<Entity>>> lightAndGui);
 	void SetLights(std::vector<std::shared_ptr<Light>> lights);
 	void SetSky(std::shared_ptr<Sky> sky);
+	void LoadShadowResources();
+
 
 	void ResizeCam(float windowWidth, float windowHeight);
 
@@ -65,6 +74,9 @@ public:
 
 	std::string GetTitle();
 
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
+
 private:
 	std::string sceneTitle;
 
@@ -82,7 +94,8 @@ private:
 	std::vector<std::shared_ptr<Entity>> lightGizmos;
 	std::unordered_map<Light*, Entity*> lightToGizmos; 
 
-
+	// Holds data for creating shadow map on lights
+	// that want to have shadows 
 	std::unordered_map<Light*, std::shared_ptr<ShadadowShaderData>> lightToShadowData;
 
 };

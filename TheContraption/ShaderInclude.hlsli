@@ -35,6 +35,7 @@ struct VertexShaderInput
 	float3 normal			: NORMAL;
 	float3 tangent			: TANGENT;
 	float4 uv				: TEXCOORD;
+
 };
 
 // Struct representing the data we expect to receive from earlier pipeline stages
@@ -54,6 +55,7 @@ struct VertexToPixel
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
 	float3 tangent			: TANGENT;
+	float4 shadowMapPos		: SHADOW_POSITION;
 };
 
 struct VertexToPixel_Sky
