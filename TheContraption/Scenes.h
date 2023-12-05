@@ -8,11 +8,15 @@
 #include <DirectXMath.h>
 #include <string>
 
+#include "ShadowShaderData.h"
+
 /*
 	The purpose of the script is to hold individual scene data that 
 	lets us organize our game objects and to draw the appropriate 
 	gui data for said scene 
 */
+
+#define LIGHT_PROJ_SIZE 15
 
 struct Scene
 {
@@ -57,10 +61,13 @@ public:
 	std::unordered_map<Light*, Entity*> GetLightToGizmos();
 	std::vector<std::shared_ptr<Camera>> GetAllCams();
 	std::shared_ptr<Camera> GetCurrentCam();
+	std::shared_ptr<ShadadowShaderData> GetShadowData(Light* light);
 
 	std::string GetTitle();
 
 private:
+	std::string sceneTitle;
+
 	// World entities 
 	std::vector<std::shared_ptr<Entity>> entities;
 
@@ -75,5 +82,7 @@ private:
 	std::vector<std::shared_ptr<Entity>> lightGizmos;
 	std::unordered_map<Light*, Entity*> lightToGizmos; 
 
-	std::string sceneTitle;
+
+	std::unordered_map<Light*, std::shared_ptr<ShadadowShaderData>> lightToShadowData;
+
 };

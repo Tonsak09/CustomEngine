@@ -8,6 +8,7 @@
 
 struct Light
 {
+public:
 	int type;
 	DirectX::XMFLOAT3 directiton;
 	float range;
@@ -16,4 +17,6 @@ struct Light
 	DirectX::XMFLOAT3 color;
 	float spotFalloff;
 	DirectX::XMFLOAT3 padding;
+
+	bool hasShadows;
 };

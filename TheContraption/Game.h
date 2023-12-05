@@ -60,6 +60,12 @@ private:
 	void CreateCameras();
 	void LoadShadowResources();
 
+	/// <summary>
+	/// Helper for creating light view matricies for a light
+	/// </summary>
+	DirectX::XMMATRIX CreateLightViewMatrix(Light light);
+
+
 	// Logic specifically for animation demonstration
 	void AnimSceneLogic(float deltaTime);
 

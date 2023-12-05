@@ -16,6 +16,7 @@ struct Light
 	float3 color;
 	float spotFalloff;
 	float3 padding;
+	bool hasShadows;
 };
 
 // Struct representing a single vertex worth of data

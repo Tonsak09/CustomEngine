@@ -22,6 +22,8 @@ Scene::Scene(std::string sceneTitle) :
 	currentCam = 0;
 
 	lightToGizmos = std::unordered_map<Light*, Entity*>();
+	lightToShadowData = std::unordered_map<Light*, std::shared_ptr<ShadadowShaderData>>();
+
 }
 
 
@@ -119,6 +121,31 @@ void Scene::SetSky(std::shared_ptr<Sky> sky)
 void Scene::SetLights(std::vector<std::shared_ptr<Light>> lights)
 {
 	(*this).lights = lights;
+
+	// Check for shadow type 
+	for (int i = 0; i < lights.size(); i++)
+	{
+		if (!lights[i]->hasShadows)
+			continue;
+
+		// Make sure exists in the unordered list 
+		if (lightToShadowData.find(lights[i].get()) == lightToShadowData.end())
+			lightToShadowData[lights[i].get()] = std::make_shared<ShadadowShaderData>();
+		
+		// Update view matrix 
+		lightToShadowData[lights[i].get()].get()->view = XMMatrixLookToLH(
+			-DirectX::XMLoadFloat3(&lights[i].get()->directiton) * 20, // Position: "Backing up" 20 units from origin
+			DirectX::XMLoadFloat3(&lights[i].get()->directiton), // Direction: light's direction
+			XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
+
+		// Set projection
+		lightToShadowData[lights[i].get()].get()->projection = XMMatrixOrthographicLH(
+			LIGHT_PROJ_SIZE,
+			LIGHT_PROJ_SIZE,
+			1.0f,
+			100.0f);
+
+	}
 }
 
 void Scene::SetLightsAndGui(std::vector<std::tuple<std::shared_ptr<Light>, std::shared_ptr<Entity>>> lightAndGui)
@@ -178,6 +205,14 @@ std::vector<std::shared_ptr<Camera>> Scene::GetAllCams()
 std::shared_ptr<Camera> Scene::GetCurrentCam()
 {
 	return cameras[currentCam];
+}
+
+std::shared_ptr<ShadadowShaderData> Scene::GetShadowData(Light* light)
+{
+	if (lightToShadowData.find(light) == lightToShadowData.end())
+		return nullptr;
+
+	return lightToShadowData[light];
 }
 
 

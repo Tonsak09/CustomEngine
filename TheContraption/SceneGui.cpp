@@ -1,7 +1,10 @@
 #include "SceneGui.h"
 using namespace DirectX;
 
-SceneGui::SceneGui(){
+SceneGui::SceneGui(std::shared_ptr<Scene> scene) :
+	scene(scene)
+
+{
 	keyToEquation = std::unordered_map<std::string, int>();
 }
 
@@ -68,7 +71,20 @@ void SceneGui::CreateLightGui(Light* light, Entity* lightGui)
 void SceneGui::CreateDirLightGui(Light* light)
 {
 	XMFLOAT3 direction = light->directiton;
-	if (ImGui::DragFloat3("Direction", &direction.x, 0.01f)) light->directiton = direction;
+	if (ImGui::DragFloat3("Direction", &direction.x, 0.01f))
+	{
+		light->directiton = direction;
+
+		if (!light->hasShadows)
+			return;
+
+		scene->GetShadowData(light).get()->view = XMMatrixLookToLH(
+			-DirectX::XMLoadFloat3(&light->directiton) * 20, // Position: "Backing up" 20 units from origin
+			DirectX::XMLoadFloat3(&light->directiton), // Direction: light's direction
+			XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
+
+		
+	}
 }
 
 void SceneGui::CreatePointLightGui(Light* light)

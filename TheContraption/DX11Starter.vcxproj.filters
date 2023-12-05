@@ -80,6 +80,9 @@
     <ClCompile Include="BasicAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">
@@ -157,6 +160,9 @@
     <ClInclude Include="BasicAnimation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowShaderData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">
@@ -178,6 +184,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowMapVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -110,6 +110,8 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 
 	float3 total = (balancedDiff * albedo + spec) * light.intensity * light.color;
 
+
+
 	return total;
 }
 
@@ -156,7 +158,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	// Assumes that input.normal is the normal later in the shader
 	input.normal = mul(unpackedNormal, TBN); // Note multiplication order!
-
 
 	// Dir lights 
 	float3 light1 = DirLight(directionalLight1, input, roughness, metalness, albedo, specColor);

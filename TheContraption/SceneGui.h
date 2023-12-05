@@ -14,10 +14,12 @@
 #include "Scenes.h"
 #include "AnimCurves.h"
 
+#include "ShadowShaderData.h"
+
 class SceneGui 
 {
 public:
-	SceneGui();
+	SceneGui(std::shared_ptr<Scene> scene);
 	void InstructionsGUI();
 
 	void UpdateEntityGUI(std::vector<std::shared_ptr<Entity>> entities);
@@ -53,4 +55,5 @@ public:
 
 	private:
 		std::unordered_map<std::string, int> keyToEquation;
+		std::shared_ptr<Scene> scene;
 };

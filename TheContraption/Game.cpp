@@ -44,14 +44,14 @@ Game::Game(HINSTANCE hInstance)
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 
 	scene = std::make_shared<Scene>("General");
-	sceneGui = std::make_shared<SceneGui>();
+	sceneGui = std::make_shared<SceneGui>(scene);
 
 	animScene = std::make_shared<Scene>("Anim");
-	animSceneGui = std::make_shared<SceneGui>();
+	animSceneGui = std::make_shared<SceneGui>(animScene);
 	animManager = std::make_shared<BasicAnimationManager>();
 
 	shadowScene = std::make_shared<Scene>("Shadow");
-	shadowSceneGui = std::make_shared<SceneGui>();
+	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
 
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
@@ -99,9 +99,9 @@ void Game::Init()
 {
 	LoadLights();
 	LoadShaders();
+	LoadShadowResources();
 	CreateGeometry();
 	CreateCameras();
-
 	
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -192,6 +192,7 @@ void Game::LoadLights()
 	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
 	directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
 	directionalLight1.intensity = 1.0;
+
 	lights2.push_back(std::make_shared<Light>(directionalLight1));
 
 	pointLight1 = {};
@@ -549,6 +550,35 @@ void Game::LoadShadowResources()
 	device->CreateTexture2D(&shadowDesc, 0, shadowTexture.GetAddressOf());
 
 	//ImGui::Image();
+
+	// Create the depth/stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
+	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D; // Says dimsions is 2D
+	shadowDSDesc.Texture2D.MipSlice = 0;						// Which mipmap to take, in our case first one
+	device->CreateDepthStencilView(
+		shadowTexture.Get(),
+		&shadowDSDesc,
+		shadowDSV.GetAddressOf());
+
+	// Create the SRV for the shadow map
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	device->CreateShaderResourceView(
+		shadowTexture.Get(),
+		&srvDesc,
+		shadowSRV.GetAddressOf());
+}
+
+DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
+{
+	return XMMatrixLookToLH(
+		-DirectX::XMLoadFloat3(&light.directiton) * 20, // Position: "Backing up" 20 units from origin
+		DirectX::XMLoadFloat3(&light.directiton), // Direction: light's direction
+		XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
 }
 
 void Game::AnimSceneLogic(float deltaTime)
