@@ -287,6 +287,7 @@ void Game::SetupPBRMaterial(
 
 	// Apply to shader registers 
 	mat.get()->AddSampler("BasicSampler", sampler);
+	mat.get()->AddSampler("ShadowSampler", shadowSampler);
 	mat.get()->AddTextureSRV("Albedo", data->albedo);
 	mat.get()->AddTextureSRV("NormalMap", data->normal);
 	mat.get()->AddTextureSRV("RoughnessMap", data->roughness);
@@ -550,6 +551,9 @@ void Game::CreateCameras()
 
 void Game::LoadShadowResources()
 {
+	
+
+
 	// Create the actual texture that will be the shadow map
 	D3D11_TEXTURE2D_DESC shadowDesc = {};
 	shadowDesc.Width = SHADOW_MAP_RESOLUTION; // Ideally a power of 2 (like 1024)
@@ -587,6 +591,17 @@ void Game::LoadShadowResources()
 		shadowTexture.Get(),
 		&srvDesc,
 		scenes[currentScene]->shadowSRV.GetAddressOf());
+
+
+	// Shadow sampler 
+	D3D11_SAMPLER_DESC shadowSampDesc = {};
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.BorderColor[0] = 1.0f; // Only need the first component
+	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 }
 
 DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
@@ -874,12 +889,18 @@ void Game::Draw(float deltaTime, float totalTime)
 		case SCENE_SHADOWS:
 			scenes[currentScene]->DrawShadows(
 				context,
+				device,
 				backBufferRTV,
 				depthBufferDSV,
 				shadowVS,
 				SHADOW_MAP_RESOLUTION,
 				(float)this->windowWidth,
 				(float)this->windowHeight);
+			{
+				ID3D11ShaderResourceView* nullSRVs[128] = {};
+				context->PSSetShaderResources(0, 128, nullSRVs);
+			}
+			
 			break;
 		default:
 			break;

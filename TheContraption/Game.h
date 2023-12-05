@@ -118,6 +118,7 @@ private:
 	std::shared_ptr<Material> schlickBronze;
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
 
 	std::unordered_map<std::shared_ptr<Material>, std::shared_ptr<MatData>> matToResources;
 

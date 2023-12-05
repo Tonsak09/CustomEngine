@@ -16,7 +16,7 @@ TextureCube Environment : register(t4);
 Texture2D ShadowMap : register(t5); 
 
 SamplerState BasicSampler : register(s0);
-
+SamplerComparisonState ShadowSampler : register(s1);
 
 cbuffer ExternalData : register(b0)
 {
@@ -138,6 +138,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 		discard;
 	}
 
+
+	
+
 	// Perform the perspective divide (divide by W) ourselves
 	input.shadowMapPos /= input.shadowMapPos.w;
 	// Convert the normalized device coordinates to UVs for sampling
@@ -146,9 +149,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// Grab the distances we need: light-to-pixel and closest-surface
 	float distToLight = input.shadowMapPos.z;
 	float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
-	// For testing, just return black where there are shadows.
-	if (distShadowMap < distToLight)
-		return float4(0, 0, 0, 1);
+	
+	// Get a ratio of comparison results using SampleCmpLevelZero()
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(
+		ShadowSampler,
+		shadowUV,
+		distToLight).r;
+
+
 
 
 	float roughness = GetRoughness(input);
@@ -172,6 +180,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	// Dir lights 
 	float3 light1 = DirLight(directionalLight1, input, roughness, metalness, albedo, specColor);
+	light1 *= shadowAmount;
 	float3 light2 = DirLight(directionalLight2, input, roughness, metalness, albedo, specColor);
 	float3 light3 = DirLight(directionalLight3, input, roughness, metalness, albedo, specColor);
 

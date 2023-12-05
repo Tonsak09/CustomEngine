@@ -28,12 +28,28 @@ Scene::Scene(std::string sceneTitle) :
 
 void Scene::DrawShadows(
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, 
+	Microsoft::WRL::ComPtr<ID3D11Device> device, 
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> backBufferRTV,
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthBufferDSV,
 	std::shared_ptr<SimpleVertexShader> shadowVS, 
 	int shadowMapResolution,
 	float windowWidth, float windowHeight)
 {
+
+	// Acne fix 
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> shadowRasterizer;
+	D3D11_RASTERIZER_DESC shadowRastDesc = {};
+	shadowRastDesc.FillMode = D3D11_FILL_SOLID;
+	shadowRastDesc.CullMode = D3D11_CULL_BACK;
+	shadowRastDesc.DepthClipEnable = true;
+	shadowRastDesc.DepthBias = 1000; // Min. precision units, not world units!
+	shadowRastDesc.SlopeScaledDepthBias = 1.0f; // Bias more based on slope
+	device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
+
+	// Set bias active 
+	context->RSSetState(shadowRasterizer.Get());
+
+
 	// Clear shadowmap
 	context->ClearDepthStencilView(shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -72,6 +88,10 @@ void Scene::DrawShadows(
 		1,
 		backBufferRTV.GetAddressOf(),
 		depthBufferDSV.Get());
+
+
+	// Reset bias 
+	context->RSSetState(0);
 }
 
 void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
