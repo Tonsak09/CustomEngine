@@ -286,7 +286,7 @@ void Game::SetupPBRMaterial(
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(normalMapAddress).c_str(), nullptr, data->normal.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(roughnessMapAddress).c_str(), nullptr, data->roughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(metalMapAddress).c_str(), nullptr, data->metal.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Dither/BayerDither8x8.png").c_str(), nullptr, dither.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Dither/DitherType.png").c_str(), nullptr, dither.GetAddressOf());
 
 	// Apply to shader registers 
 	mat.get()->AddSampler("BasicSampler", sampler);
@@ -297,6 +297,11 @@ void Game::SetupPBRMaterial(
 	mat.get()->AddTextureSRV("MetalnessMap", data->metal);
 	mat.get()->AddTextureSRV("Environment", sky->GetCubeSRV());
 	mat.get()->AddTextureSRV("Dither", dither);
+
+	DirectX::XMFLOAT2 ratio(this->windowWidth, this->windowHeight);
+	mat.get()->GetPixelShader()->SetData("screenSize", &ratio, sizeof(float));
+
+	MaterialsPBR.push_back(mat);
 }
 
 // --------------------------------------------------------
@@ -681,6 +686,13 @@ void Game::OnResize()
 	DXCore::OnResize();
 	 
 	scene->ResizeCam((float)this->windowWidth, (float)this->windowHeight);
+	for (int i = 0; i < MaterialsPBR.size(); i++)
+	{
+		DirectX::XMFLOAT2 ratio(this->windowWidth, this->windowHeight);
+		MaterialsPBR[i]->GetPixelShader()->SetData(
+			"screenSize", &ratio, sizeof(float)
+		);
+	}
 }
 
 void Game::UpdateImGui(float deltaTime)

@@ -16,6 +16,7 @@ TextureCube Environment : register(t4);
 Texture2D ShadowMap		: register(t5); 
 Texture2D Dither		: register(t6);
 
+
 SamplerState BasicSampler : register(s0);
 SamplerComparisonState ShadowSampler : register(s1);
 
@@ -29,6 +30,7 @@ cbuffer ExternalData : register(b0)
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
+	float2 screenSize;
 }
 
 
@@ -136,11 +138,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
 	
 
-	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w;
-	//return float4(textureCoordinate, 0, 1);
-	//return Dither.Sample(BasicSampler, textureCoordinate);
+	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; // Screenspace 
+	float aspect = screenSize.x / screenSize.y;
+	//textureCoordinate.x = textureCoordinate.x * aspect;
 
-	if (albedo.a < 0.1 || Dither.Sample(BasicSampler, textureCoordinate).x < 0.5)
+	//return Dither.Sample(BasicSampler, textureCoordinate);
+	//return float4(screenSize, 0, 1);
+	if (albedo.a < 0.1 || Dither.Sample(BasicSampler, textureCoordinate).x < 0.9f)
 	{
 		discard;
 	}

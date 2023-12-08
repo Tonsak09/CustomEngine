@@ -116,6 +116,7 @@ private:
 	std::shared_ptr<Material> schlickBricks;
 	std::shared_ptr<Material> schlickCushions;
 	std::shared_ptr<Material> schlickBronze;
+	std::vector<std::shared_ptr<Material>> MaterialsPBR;
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;

@@ -55,6 +55,7 @@ public:
 	/// <param name="nextOffset"></param>
 	void SetUVOffset(DirectX::XMFLOAT2 nextOffset);
 
+
 	/// <summary>
 	/// Set this material's current vertex shader 
 	/// </summary>
