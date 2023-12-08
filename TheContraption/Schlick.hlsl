@@ -74,6 +74,21 @@ float3 GetSpec(VertexToPixel input)
 }
 #pragma endregion 
 
+void DitherLogic(VertexToPixel input, float attenuate)
+{
+	// Screenspace 
+	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; 
+	textureCoordinate.x = textureCoordinate.x * aspect;
+
+	float ditherCull = lerp(1, Dither.Sample(BasicSampler, textureCoordinate * 50.0f).x, ditherLevel);
+	float cullByAttenuate = lerp(1, ditherCull, attenuate);
+	if (ditherCull < 0.9f) // Not within range 
+	{
+		discard;
+	}
+	//else if(cullByAttenuate < )
+}
+
 #pragma region LIGHTS_LOGIC
 /// <summary>
 /// Lowers light strength over distance 
@@ -119,6 +134,9 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 	float3 V = normalize(camPos - input.worldPosition);
 
 	float atten = Attenuate(light, input.worldPosition);
+
+	DitherLogic(input, atten);
+
 	float3 diffuse = saturate(dot(input.normal, lightDir));
 	float3 F;
 	float3 spec = MicrofacetBRDF(input.normal, lightDir, V, roughness, specColor, F);
@@ -149,14 +167,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	}
 	
 	#pragma region DITHERING
-	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; // Screenspace 
-	//float aspect = screenSize.x / screenSize.y;
-	textureCoordinate.x = textureCoordinate.x * aspect;
-
-	if (lerp(1, Dither.Sample(BasicSampler, textureCoordinate).x, ditherLevel) < 0.9f)
-	{
-		discard;
-	}
+	//DitherLogic(input, 0.5f);
 
 	#pragma endregion
 
