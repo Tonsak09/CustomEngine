@@ -1,13 +1,22 @@
-
-
 #define MAX_SPECULAR_EXPONENT 256.0f
 
 #include "ShaderInclude.hlsli"
 #include "PBRFunctions.hlsli"
 
-// TODO:	Pass in variables that need to be read by sampler
-//			so that we do not read more than once
+/*
+	This is a PBR Shader that offers the following standard options
+		- Albedo
+		- Normal 
+		- Roughness 
+		- Metalness
+		- Shadows
 
+	Has following custom options
+		- Alpha cuttout 
+		- Dithering 
+*/
+
+#pragma region TEXTURES
 Texture2D Albedo		: register(t0); 
 Texture2D NormalMap		: register(t1);
 Texture2D RoughnessMap	: register(t2);
@@ -15,10 +24,12 @@ Texture2D MetalnessMap	: register(t3);
 TextureCube Environment : register(t4);
 Texture2D ShadowMap		: register(t5); 
 Texture2D Dither		: register(t6);
+#pragma endregion
 
-
+#pragma region SAMPLER 
 SamplerState BasicSampler : register(s0);
 SamplerComparisonState ShadowSampler : register(s1);
+#pragma endregion 
 
 cbuffer ExternalData : register(b0)
 {
@@ -30,10 +41,12 @@ cbuffer ExternalData : register(b0)
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
+
+	float ditherLevel;
 	float aspect;
 }
 
-
+#pragma region GETTERS
 float2 GetUV(VertexToPixel input)
 {
 	return input.uv + uvOffset;
@@ -42,18 +55,16 @@ float2 GetUV(VertexToPixel input)
 float4 GetAlbedo(VertexToPixel input)
 {
 	float4 surfaceColor = Albedo.Sample(BasicSampler, GetUV(input));
-	return surfaceColor;//pow(surfaceColor.rgb, 2.2f);
+	return surfaceColor;
 }
 
 float GetRoughness(VertexToPixel input)
 {
-	//return 0.5;
 	return RoughnessMap.Sample(BasicSampler, input.uv).r;
 }
 
 float GetMetalness(VertexToPixel input)
 {
-	//return 1.0f;
 	return MetalnessMap.Sample(BasicSampler, input.uv).r;
 }
 
@@ -61,7 +72,9 @@ float3 GetSpec(VertexToPixel input)
 {
 	return lerp(F0_NON_METAL, GetAlbedo(input).rgb, GetMetalness(input));
 }
+#pragma endregion 
 
+#pragma region LIGHTS_LOGIC
 /// <summary>
 /// Lowers light strength over distance 
 /// </summary>
@@ -91,7 +104,7 @@ float3 DirLight(Light light, VertexToPixel input, float roughness, float metalne
 	float3 total = (balancedDiff * albedo + spec) * light.intensity * light.color;
 
 
-	return total;//(diffColor * diffuse + spec);
+	return total;
 }
 
 float3 PointLight(Light light, VertexToPixel input, float roughness, float metalness, float3 albedo, float3 specColor)
@@ -118,37 +131,36 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 
 	return total;
 }
+#pragma endregion 
 
 
-
-
-// --------------------------------------------------------
-// The entry point (main method) for our pixel shader
-// 
-// - Input is the data coming down the pipeline (defined by the struct)
-// - Output is a single color (float4)
-// - Has a special semantic (SV_TARGET), which means 
-//    "put the output of this into the current render target"
-// - Named "main" because that's the default the shader compiler looks for
-// --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// Sample textures   
+	// Sample everything    
 	float4 albedo = GetAlbedo(input);
-	
-	
+	float roughness = GetRoughness(input);
+	float metalness = GetMetalness(input);
+	float3 specColor = GetSpec(input);
 
+	// Culling 
+	if (albedo.a < 0.1)
+	{
+		discard;
+	}
+	
+	#pragma region DITHERING
 	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; // Screenspace 
 	//float aspect = screenSize.x / screenSize.y;
 	textureCoordinate.x = textureCoordinate.x * aspect;
 
-	//return Dither.Sample(BasicSampler, textureCoordinate);
-	//return float4(screenSize, 0, 1);
-	if (albedo.a < 0.1 || Dither.Sample(BasicSampler, textureCoordinate).x < 0.9f)
+	if (lerp(1, Dither.Sample(BasicSampler, textureCoordinate).x, ditherLevel) < 0.9f)
 	{
 		discard;
 	}
 
+	#pragma endregion
+
+	#pragma region SHADOWS
 	// Perform the perspective divide (divide by W) ourselves
 	input.shadowMapPos /= input.shadowMapPos.w;
 	// Convert the normalized device coordinates to UVs for sampling
@@ -163,13 +175,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 		ShadowSampler,
 		shadowUV,
 		distToLight).r;
+	#pragma endregion
 
-
-	float roughness = GetRoughness(input);
-	float metalness = GetMetalness(input);
-	float3 specColor = GetSpec(input);
-
-
+	#pragma region NORMALS
 	// Normals 
 	float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv).rgb * 2 - 1;
 	unpackedNormal = normalize(unpackedNormal);
@@ -183,7 +191,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	// Assumes that input.normal is the normal later in the shader
 	input.normal = mul(unpackedNormal, TBN); // Note multiplication order!
+	#pragma endregion
 
+	#pragma region LIGHTS
 	// Dir lights 
 	float3 light1 = DirLight(directionalLight1, input, roughness, metalness, albedo, specColor);
 	light1 *= shadowAmount;
@@ -195,16 +205,17 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 light5 = PointLight(pointLight2, input, roughness, metalness, albedo, specColor);
 
 	float3 totalLight = light1 + light2 + light3 + light4 + light5;
+	#pragma endregion
 
-
-	// Environment
+	#pragma region ENVIRONMENT
 	float3 viewVector = normalize(camPos - input.worldPosition);
 	float3 reflectionVector = reflect(-viewVector, input.normal); // Need camera to pixel vector, so negate
 	float3 reflectionColor = Environment.Sample(BasicSampler, reflectionVector).rgb;
-	
+	#pragma endregion
+
+	// Alpha correction 
 	// 0.04f is recommended amount 
 	float3 finalColor = lerp(totalLight, reflectionColor, SimpleFresnel(input.normal, viewVector, 0.04f));
 
-	//return float4(input.uv, 0, 1);
-	return float4( pow(finalColor, 1.0f / 2.2f), 1); //float4(pow(finalColor, 1.0f / 2.2f), 1);
+	return float4( pow(finalColor, 1.0f / 2.2f), 1);
 }

@@ -256,7 +256,7 @@ void Scene::GenerateLightGizmos(
 		DirectX::XMFLOAT4 startColor = DirectX::XMFLOAT4(light->color.x, light->color.y, light->color.z, 1);
 
 		// Light gizmos mat
-		std::shared_ptr<Material> mat = std::make_shared<Material>(startColor, 1.0f, DirectX::XMFLOAT2(0, 0), vertex, pixel);
+		std::shared_ptr<Material> mat = std::make_shared<Material>(startColor, 1.0f, false, DirectX::XMFLOAT2(0, 0), vertex, pixel);
 
 		// Add light gizmos to their own vector 
 		lightGizmos.push_back(std::shared_ptr<Entity>(new Entity(lightMesh, mat)));

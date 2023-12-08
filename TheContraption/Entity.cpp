@@ -48,10 +48,10 @@ void Entity::Draw(
 	std::shared_ptr<SimplePixelShader> ps = mat->GetPixelShader();
 	ps->SetFloat4("colorTint", mat->GetTint());
 
-	//Transform* trans = camera->GetTransform();
-	//DirectX::XMFLOAT3 pos = trans->GetPosition();
+	//mat.get()->GetPixelShader()->SetData("screenSize", &hasDither, sizeof(bool));
+	ps->SetFloat("ditherLevel", mat->GetDitherLevel());
 	ps->SetFloat3("camPos", *(camera->GetTransform()->GetPosition().get()));
-	//ps->SetFloat("roughness", mat->GetRoughness());
+	ps->SetFloat("roughness", mat->GetRoughness());
 	ps->SetFloat2("uvOffset", mat->GetUVOffset());
 
 	ps->CopyAllBufferData();

@@ -378,15 +378,56 @@ void Game::CreateGeometry()
 
 	#pragma region SETUP_MATERIALS
 
-	mat1 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, customPShader);
-	mat2 = std::make_shared<Material>(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
-	mat3 = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 0, 1), 1.0f, DirectX::XMFLOAT2(0, 0), vertexShader, pixelShader);
-	lit = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
-	//litCushion = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, litShader);
+	mat1 = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1),			// Tint
+		1.0f,									// Roughness
+		0,										// Dither? 
+		DirectX::XMFLOAT2(0, 0),				// UV Offset
+		vertexShader, customPShader);			// Vertex and Pixel Shaders 
+	mat2 = std::make_shared<Material>(
+		DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1), 
+		1.0f, 
+		0,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, pixelShader);
+	mat3 = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 0, 1), 
+		1.0f, 
+		0,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, pixelShader);
+	lit = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1), 
+		0.5f, 
+		0,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, litShader);
 
-	schlickBricks = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
-	schlickCushions = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
-	schlickBronze = std::make_shared<Material>(DirectX::XMFLOAT4(1, 1, 1, 1), 0.5f, DirectX::XMFLOAT2(0, 0), vertexShader, schlickShader);
+	// PBR's 
+	schlickBricks = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1), 
+		0.5f, 
+		1.0f,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, schlickShader);
+	rough = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1), 
+		0.5f, 
+		1.0f,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, schlickShader);
+	wood = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1), 
+		0.5f, 
+		0.0f,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, schlickShader);
+	schlickBronze = std::make_shared<Material>(
+		DirectX::XMFLOAT4(1, 1, 1, 1), 
+		0.5f, 
+		1.0f,
+		DirectX::XMFLOAT2(0, 0), 
+		vertexShader, schlickShader);
 
 	std::shared_ptr<Sky> sky = std::make_shared<Sky>(
 		device,
@@ -432,14 +473,24 @@ void Game::CreateGeometry()
 	);
 
 	SetupPBRMaterial(
-		schlickCushions,
+		rough,
+		L"../../Assets/Textures/PBR/rough_albedo.png",
+		L"../../Assets/Textures/PBR/rough_normals.png",
+		L"../../Assets/Textures/PBR/rough_roughness",
+		L"../../Assets/Textures/PBR/rough_metal",
+		sky.get()
+	);
+
+	SetupPBRMaterial(
+		wood,
 		L"../../Assets/Textures/PBR/wood_albedo.png",
 		L"../../Assets/Textures/PBR/wood_normals.png",
 		L"../../Assets/Textures/PBR/wood_roughness",
 		L"../../Assets/Textures/PBR/wood_metal",
 		sky.get()
 	);
-	
+
+
 	#pragma endregion
 
 	#pragma region GENERIC_SCENE_ENTITIES
@@ -453,7 +504,7 @@ void Game::CreateGeometry()
 	entities.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 	entities[1]->GetTransform()->MoveRelative(5.0f, 0.0f, 0.0f);
 
-	entities.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickCushions)));
+	entities.push_back(std::shared_ptr<Entity>(new Entity(cube, rough)));
 	entities[2]->GetTransform()->MoveRelative(-5.0f, 0.0f, 0.0f);
 
 	// Put all into scene(s)
@@ -484,8 +535,7 @@ void Game::CreateGeometry()
 
 	#pragma endregion
 
-
-	#pragma region GENERIC_SCENE_ENTITIES
+	#pragma region SHADOW_SCENE_ENTITIES
 
 	std::vector<std::shared_ptr<Entity>> shadowEntities = std::vector<std::shared_ptr<Entity>>();
 
@@ -496,10 +546,10 @@ void Game::CreateGeometry()
 	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 	shadowEntities[1]->GetTransform()->MoveRelative(5.0f, 0.0f, 0.0f);
 
-	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickCushions)));
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(cube, rough)));
 	shadowEntities[2]->GetTransform()->MoveRelative(-5.0f, 0.0f, 0.0f);
 	
-	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(quad, schlickCushions)));
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(quad, wood)));
 	shadowEntities[3]->GetTransform()->MoveRelative(0.0f, -2.0f, 0.0f);
 	shadowEntities[3]->GetTransform()->SetScale(DirectX::XMFLOAT3(10, 1, 10));
 
@@ -560,7 +610,6 @@ void Game::CreateCameras()
 
 void Game::LoadShadowResources()
 {
-	
 
 
 	// Create the actual texture that will be the shadow map

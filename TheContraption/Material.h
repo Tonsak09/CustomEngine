@@ -8,7 +8,12 @@
 class Material
 {
 public:
-	Material(DirectX::XMFLOAT4 tint, float roughness, DirectX::XMFLOAT2 uvOffset, std::shared_ptr<SimpleVertexShader> vertex, std::shared_ptr<SimplePixelShader> pixel);
+	Material(
+		DirectX::XMFLOAT4 tint, 
+		float roughness, 
+		float ditherLevel,
+		DirectX::XMFLOAT2 uvOffset, 
+		std::shared_ptr<SimpleVertexShader> vertex, std::shared_ptr<SimplePixelShader> pixel);
 
 	/// <summary>
 	/// Get this material's current color tint 
@@ -20,6 +25,10 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	float GetRoughness();
+	/// <summary>
+	/// Whether to include dither on this material 
+	/// </summary>
+	float GetDitherLevel();
 	/// <summary>
 	/// Get this material's current vertex shader shared pointer 
 	/// </summary>
@@ -78,6 +87,7 @@ private:
 	DirectX::XMFLOAT3 camPos;
 	float roughness;
 	DirectX::XMFLOAT2 uvOffset;
+	float ditherLevel;
 
 	std::shared_ptr<SimpleVertexShader> vertex;
 	std::shared_ptr<SimplePixelShader> pixel;
