@@ -30,7 +30,7 @@ cbuffer ExternalData : register(b0)
 	Light directionalLight3;
 	Light pointLight1;
 	Light pointLight2;
-	float2 screenSize;
+	float aspect;
 }
 
 
@@ -139,8 +139,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
 
 	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; // Screenspace 
-	float aspect = screenSize.x / screenSize.y;
-	//textureCoordinate.x = textureCoordinate.x * aspect;
+	//float aspect = screenSize.x / screenSize.y;
+	textureCoordinate.x = textureCoordinate.x * aspect;
 
 	//return Dither.Sample(BasicSampler, textureCoordinate);
 	//return float4(screenSize, 0, 1);

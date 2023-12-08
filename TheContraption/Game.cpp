@@ -688,9 +688,11 @@ void Game::OnResize()
 	scene->ResizeCam((float)this->windowWidth, (float)this->windowHeight);
 	for (int i = 0; i < MaterialsPBR.size(); i++)
 	{
-		DirectX::XMFLOAT2 ratio(this->windowWidth, this->windowHeight);
+		//DirectX::XMFLOAT2 ratio((float)this->windowWidth, (float)this->windowHeight);
+		float aspect((float)this->windowWidth / (float)this->windowHeight);
+		printf("%f \n", (float)this->windowWidth / (float)this->windowHeight);
 		MaterialsPBR[i]->GetPixelShader()->SetData(
-			"screenSize", &ratio, sizeof(float)
+			"aspect", &aspect, sizeof(float)
 		);
 	}
 }
