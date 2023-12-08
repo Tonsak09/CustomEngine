@@ -33,7 +33,7 @@ Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,			// The application's handle
 		L"DirectX Game",	// Text for the window's title bar (as a wide-character string)
-		1280,				// Width of the window's client area
+		720,				// Width of the window's client area
 		720,				// Height of the window's client area
 		false,				// Sync the framerate to the monitor refresh? (lock framerate)
 		true)				// Show extra stats (fps) in title bar?
@@ -279,11 +279,14 @@ void Game::SetupPBRMaterial(
 	matToResources[mat] = tempData;
 	MatData* data = tempData.get();
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dither;
+
 	// Load in the textures and store them into matdata
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(albedoTextureAddress).c_str(), nullptr, data->albedo.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(normalMapAddress).c_str(), nullptr, data->normal.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(roughnessMapAddress).c_str(), nullptr, data->roughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(metalMapAddress).c_str(), nullptr, data->metal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Dither/BayerDither8x8.png").c_str(), nullptr, dither.GetAddressOf());
 
 	// Apply to shader registers 
 	mat.get()->AddSampler("BasicSampler", sampler);
@@ -293,6 +296,7 @@ void Game::SetupPBRMaterial(
 	mat.get()->AddTextureSRV("RoughnessMap", data->roughness);
 	mat.get()->AddTextureSRV("MetalnessMap", data->metal);
 	mat.get()->AddTextureSRV("Environment", sky->GetCubeSRV());
+	mat.get()->AddTextureSRV("Dither", dither);
 }
 
 // --------------------------------------------------------
@@ -604,14 +608,6 @@ void Game::LoadShadowResources()
 	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 }
 
-//DirectX::XMMATRIX Game::CreateLightViewMatrix(Light light)
-//{
-//	return XMMatrixLookToLH(
-//		-DirectX::XMLoadFloat3(&light.directiton) * 20, // Position: "Backing up" 20 units from origin
-//		DirectX::XMLoadFloat3(&light.directiton), // Direction: light's direction
-//		XMVectorSet(0, 1, 0, 0)); // Up: World up vector (Y axis)
-//}
-
 void Game::AnimSceneLogic(float deltaTime)
 {
 	//deltaTime /= 100.0f;
@@ -636,32 +632,6 @@ void Game::AnimSceneLogic(float deltaTime)
 		startAnimation = false;
 
 		// Following sets up start and end animations for eye 
-
-		//animManager->AddAnimation( // ConnectionA
-		//	animScene->GetEntities()[0]->GetTransform(),
-		//	isSplit ? inPos : outPos,
-		//	isSplit ? outPos : inPos,
-		//	time,
-		//	curveType
-		//);
-
-		//animManager->AddAnimation( // ConnectionB
-		//	animScene->GetEntities()[1]->GetTransform(),
-		//	isSplit ? inPos : outPos,
-		//	isSplit ? outPos : inPos,
-		//	time,
-		//	curveType
-		//);
-
-		//animManager->AddAnimation( // ConnectionC
-		//	animScene->GetEntities()[2]->GetTransform(),
-		//	isSplit ? inPos : outPos,
-		//	isSplit ? outPos : inPos,
-		//	time,
-		//	curveType
-		//);
-
-
 		animManager->AddAnimation( // Eye_Front
 			animScene->GetEntities()[3]->GetTransform(),
 			isSplit ? front : rest,
@@ -669,14 +639,6 @@ void Game::AnimSceneLogic(float deltaTime)
 			isSplit ? eyeComTime : eyeSepTime,
 			isSplit ? eyeComCurve : eyeSepCurve
 		);
-
-		//animManager->AddAnimation( // Eye_Mid
-		//	animScene->GetEntities()[4]->GetTransform(),
-		//	isSplit ? rest : outPos,
-		//	isSplit ? outPos : rest,
-		//	time,
-		//	curveType
-		//);
 
 		animManager->AddAnimation( // Eye_Back
 			animScene->GetEntities()[5]->GetTransform(),
@@ -935,6 +897,4 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Must re-bind buffers after presenting, as they become unbound
 		context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthBufferDSV.Get());
 	}
-
-	
 }

@@ -53,6 +53,7 @@ struct VertexToPixel
 	float4 screenPosition	: SV_POSITION;
 	float3 worldPosition	: POSITION;
 	float2 uv				: TEXCOORD;
+    float4 screenPos		: TEXCOORD1;
 	float3 normal			: NORMAL;
 	float3 tangent			: TANGENT;
 	float4 shadowMapPos		: SHADOW_POSITION;

@@ -31,19 +31,27 @@ VertexToPixel main( VertexShaderInput input )
 	VertexToPixel output;
 	
 	// Multiply the three matrices together first
-	matrix wvp = mul(projMatrix, mul(viewMatrix, world));
-	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
+	matrix mvp = mul(projMatrix, mul(viewMatrix, world));
+	output.screenPosition = mul(mvp, float4(input.localPosition, 1.0f));
 
 	output.uv = input.uv;
 
 	output.normal = mul((float3x3)worldInvTranspose, input.normal); // Perfect
 	output.tangent = mul((float3x3)world, input.tangent);
 	output.worldPosition = mul(world, float4(input.localPosition, 1.0f)).xyz;
+	
+	float4 clip = mul(mvp, float4(input.localPosition, 1.0f));  // into clip space
+
+
+	//xNDC *= 720;
+	//yNDC *= 720;
+	output.screenPos = clip;
+	//output.screenPos = float4(xNDC, yNDC, 0, 1); //mul(mul(viewMatrix, input.localPosition), clip);  // into clip space
 
 
 	// Shadows 
-	matrix shadowWVP = mul(lightProjection, mul(lightView, world));
-	output.shadowMapPos = mul(shadowWVP, float4(input.localPosition, 1.0f));
+	matrix shadowMvp = mul(lightProjection, mul(lightView, world));
+	output.shadowMapPos = mul(shadowMvp, float4(input.localPosition, 1.0f));
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)

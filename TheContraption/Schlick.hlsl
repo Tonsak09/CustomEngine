@@ -8,12 +8,13 @@
 // TODO:	Pass in variables that need to be read by sampler
 //			so that we do not read more than once
 
-Texture2D Albedo : register(t0); 
-Texture2D NormalMap : register(t1);
-Texture2D RoughnessMap : register(t2);
-Texture2D MetalnessMap : register(t3);
+Texture2D Albedo		: register(t0); 
+Texture2D NormalMap		: register(t1);
+Texture2D RoughnessMap	: register(t2);
+Texture2D MetalnessMap	: register(t3);
 TextureCube Environment : register(t4);
-Texture2D ShadowMap : register(t5); 
+Texture2D ShadowMap		: register(t5); 
+Texture2D Dither		: register(t6);
 
 SamplerState BasicSampler : register(s0);
 SamplerComparisonState ShadowSampler : register(s1);
@@ -133,13 +134,16 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// Sample textures   
 	float4 albedo = GetAlbedo(input);
 	
-	if (albedo.a < 0.1)
+	
+
+	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w;
+	//return float4(textureCoordinate, 0, 1);
+	//return Dither.Sample(BasicSampler, textureCoordinate);
+
+	if (albedo.a < 0.1 || Dither.Sample(BasicSampler, textureCoordinate).x < 0.5)
 	{
 		discard;
 	}
-
-
-	
 
 	// Perform the perspective divide (divide by W) ourselves
 	input.shadowMapPos /= input.shadowMapPos.w;
@@ -155,8 +159,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 		ShadowSampler,
 		shadowUV,
 		distToLight).r;
-
-
 
 
 	float roughness = GetRoughness(input);
