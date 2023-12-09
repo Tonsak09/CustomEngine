@@ -80,6 +80,7 @@ void SceneGui::CreateDirLightGui(Light* light)
 		if (!light->hasShadows)
 			return;
 
+		// Update change to shadow making 
 		DirectX::XMStoreFloat4x4(
 			&scene->GetShadowData(light).get()->view,
 			XMMatrixLookToLH(

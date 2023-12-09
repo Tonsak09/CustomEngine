@@ -33,7 +33,7 @@ Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,			// The application's handle
 		L"DirectX Game",	// Text for the window's title bar (as a wide-character string)
-		720,				// Width of the window's client area
+		1280,				// Width of the window's client area
 		720,				// Height of the window's client area
 		false,				// Sync the framerate to the monitor refresh? (lock framerate)
 		true)				// Show extra stats (fps) in title bar?
@@ -43,33 +43,7 @@ Game::Game(HINSTANCE hInstance)
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 
-	scene = std::make_shared<Scene>("General");
-	sceneGui = std::make_shared<SceneGui>(scene);
-
-	animScene = std::make_shared<Scene>("Anim");
-	animSceneGui = std::make_shared<SceneGui>(animScene);
-	animManager = std::make_shared<BasicAnimationManager>();
-
-	shadowScene = std::make_shared<Scene>("Shadow");
-	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
-
-	scenes.push_back(scene);
-	scenes.push_back(animScene);
-	scenes.push_back(shadowScene);
-	sceneGuis.push_back(sceneGui);
-	sceneGuis.push_back(animSceneGui);
-	sceneGuis.push_back(shadowSceneGui);
-
-
-	currentGUI = 0; currentScene = SCENE_SHADOWS;
 	
-	// Defaults 
-	eyeSepTime = 1.5f;
-	eyeSepCurve = EASE_OUT_ELASTIC;
-	eyeComTime = 1.0f;
-	eyeComCurve = EASE_IN_BOUNCE;
-
-	buttonCooldown = 2.0f;
 
 #endif
 }
@@ -101,6 +75,36 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
+	scene = std::make_shared<Scene>("General");
+	sceneGui = std::make_shared<SceneGui>(scene);
+
+	animScene = std::make_shared<Scene>("Anim");
+	animSceneGui = std::make_shared<SceneGui>(animScene);
+	animManager = std::make_shared<BasicAnimationManager>();
+
+	shadowScene = std::make_shared<Scene>("Shadow");
+	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
+
+	scenes.push_back(scene);
+	scenes.push_back(animScene);
+	scenes.push_back(shadowScene);
+	sceneGuis.push_back(sceneGui);
+	sceneGuis.push_back(animSceneGui);
+	sceneGuis.push_back(shadowSceneGui);
+
+
+	currentGUI = 0; currentScene = SCENE_SHADOWS;
+
+	// Defaults 
+	eyeSepTime = 1.5f;
+	eyeSepCurve = EASE_OUT_ELASTIC;
+	eyeComTime = 1.0f;
+	eyeComCurve = EASE_IN_BOUNCE;
+
+	buttonCooldown = 2.0f;
+
+
+
 	LoadLights();
 	LoadShaders();
 	LoadShadowResources();
@@ -837,7 +841,7 @@ void Game::UpdateImGui(float deltaTime)
 
 		break;
 	case SCENE_SHADOWS:
-		shadowSceneGui->CreateShadowGui();
+		//shadowSceneGui->CreateShadowGui();
 		break;
 	default:
 		break;
