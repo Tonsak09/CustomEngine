@@ -242,6 +242,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Dither.hlsli" />
     <None Include="packages.config" />
     <None Include="PBRFunctions.hlsli" />
     <None Include="ShaderInclude.hlsli" />

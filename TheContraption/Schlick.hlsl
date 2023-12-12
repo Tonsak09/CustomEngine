@@ -2,6 +2,7 @@
 
 #include "ShaderInclude.hlsli"
 #include "PBRFunctions.hlsli"
+#include "Dither.hlsli"
 
 /*
 	This is a PBR Shader that offers the following standard options
@@ -74,20 +75,20 @@ float3 GetSpec(VertexToPixel input)
 }
 #pragma endregion 
 
-void DitherLogic(VertexToPixel input, float attenuate)
-{
-	// Screenspace 
-	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; 
-	textureCoordinate.x = textureCoordinate.x * aspect;
-
-	float ditherCull = lerp(1, Dither.Sample(BasicSampler, textureCoordinate * 50.0f).x, ditherLevel);
-	float cullByAttenuate = lerp(1, ditherCull, attenuate);
-	if (ditherCull < 0.9f) // Not within range 
-	{
-		discard;
-	}
-	//else if(cullByAttenuate < )
-}
+//void DitherLogic(VertexToPixel input, float attenuate)
+//{
+//	// Screenspace 
+//	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; 
+//	textureCoordinate.x = textureCoordinate.x * aspect;
+//
+//	float ditherCull = lerp(1, Dither.Sample(BasicSampler, textureCoordinate * 20.0f).x, ditherLevel);
+//	float cullByAttenuate = lerp(1, ditherCull, attenuate);
+//	if (ditherCull < 0.9f) // Not within range 
+//	{
+//		discard;
+//	}
+//	//else if(cullByAttenuate < )
+//}
 
 #pragma region LIGHTS_LOGIC
 /// <summary>
@@ -135,7 +136,7 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 
 	float atten = Attenuate(light, input.worldPosition);
 
-	DitherLogic(input, atten);
+	DitherLogic(input, Dither, BasicSampler, atten, aspect, ditherLevel);
 
 	float3 diffuse = saturate(dot(input.normal, lightDir));
 	float3 F;
@@ -144,8 +145,6 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 	float3 balancedDiff = DiffuseEnergyConserve(diffuse, spec, metalness);
 
 	float3 total = (balancedDiff * albedo + spec) * light.intensity * light.color;
-
-
 
 	return total;
 }
