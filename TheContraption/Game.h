@@ -11,6 +11,8 @@
 
 #define SHADOW_MAP_RESOLUTION 1024
 
+#define MAX_DITHERS 5
+
 #include "DXCore.h"
 #include <DirectXMath.h>
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects

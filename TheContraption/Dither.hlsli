@@ -1,12 +1,11 @@
 #include "ShaderInclude.hlsli"
 
 void DitherLogic(
-VertexToPixel input, 
-Texture2D Dither, 
-SamplerState BasicSampler, 
-float attenuate, 
-float aspect, 
-float ditherLevel
+VertexToPixel input,        // Info frrom Vertex Shader 
+Texture2D Dither,           // Textures to for dither patterrns 
+SamplerState BasicSampler,  // Allows us to sample our texture (We do this here since we don't know which dither texture) 
+float aspect,               // Aspect ratio of screen 
+float ditherLevel           // DEBUG VALUE 
 )
 {
 	// Screenspace 
@@ -14,10 +13,8 @@ float ditherLevel
     textureCoordinate.x = textureCoordinate.x * aspect;
 
     float ditherCull = lerp(1, Dither.Sample(BasicSampler, textureCoordinate * 20.0f).x, ditherLevel);
-    float cullByAttenuate = lerp(1, ditherCull, attenuate);
     if (ditherCull < 0.9f) // Not within range 
     {
         discard;
     }
-	//else if(cullByAttenuate < )
 }

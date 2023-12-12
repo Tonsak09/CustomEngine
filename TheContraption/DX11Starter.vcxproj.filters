@@ -198,5 +198,8 @@
     <None Include="PBRFunctions.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Dither.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

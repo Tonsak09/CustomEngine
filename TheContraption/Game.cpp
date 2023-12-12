@@ -43,16 +43,9 @@ Game::Game(HINSTANCE hInstance)
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 
-	
-
 #endif
 }
 
-// --------------------------------------------------------
-// Destructor - Clean up anything our game has created:
-//  - Delete all objects manually created within this class
-//  - Release() all Direct3D objects created within this class
-// --------------------------------------------------------
 Game::~Game()
 {
 	// Call delete or delete[] on any objects or arrays you've
@@ -69,10 +62,6 @@ Game::~Game()
 
 }
 
-// --------------------------------------------------------
-// Called once per program, after Direct3D and the window
-// are initialized but before the game loop.
-// --------------------------------------------------------
 void Game::Init()
 {
 	scene = std::make_shared<Scene>("General");
@@ -196,7 +185,6 @@ void Game::LoadLights()
 		scene->SetLights(lights);
 	#pragma endregion
 
-
 	#pragma region AnimScene
 	std::vector<std::shared_ptr<Light>> lights2 = std::vector<std::shared_ptr<Light>>();
 
@@ -284,13 +272,30 @@ void Game::SetupPBRMaterial(
 	MatData* data = tempData.get();
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dither;
+	std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> dithers(MAX_DITHERS);
 
 	// Load in the textures and store them into matdata
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(albedoTextureAddress).c_str(), nullptr, data->albedo.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(normalMapAddress).c_str(), nullptr, data->normal.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(roughnessMapAddress).c_str(), nullptr, data->roughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(metalMapAddress).c_str(), nullptr, data->metal.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), FixPath(L"../../Assets/Textures/Dither/DitherType.png").c_str(), nullptr, dither.GetAddressOf());
+	
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/BasicDither.png").c_str(), nullptr, dither.GetAddressOf());
+	
+	// Get Dither Textures 
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/BasicDither.png").c_str(), nullptr, dithers[0].GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/BasicDither.png").c_str(), nullptr, dithers[1].GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/WindowDither.png").c_str(), nullptr, dithers[2].GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/WindowDither.png").c_str(), nullptr, dithers[3].GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), 
+		FixPath(L"../../Assets/Textures/Dither/SmallDither.png").c_str(), nullptr, dithers[4].GetAddressOf());
+
+
 
 	// Apply to shader registers 
 	mat.get()->AddSampler("BasicSampler", sampler);
@@ -300,7 +305,14 @@ void Game::SetupPBRMaterial(
 	mat.get()->AddTextureSRV("RoughnessMap", data->roughness);
 	mat.get()->AddTextureSRV("MetalnessMap", data->metal);
 	mat.get()->AddTextureSRV("Environment", sky->GetCubeSRV());
-	mat.get()->AddTextureSRV("Dither", dither);
+	
+	
+	for (int i = 0; i < dithers.size(); i++)
+	{
+		std::string currentDither = "Dither" + std::to_string(i + 1);
+		mat.get()->AddTextureSRV(currentDither, dithers[i]);
+	}
+
 
 	DirectX::XMFLOAT2 ratio(this->windowWidth, this->windowHeight);
 	mat.get()->GetPixelShader()->SetData("screenSize", &ratio, sizeof(float));
@@ -308,14 +320,7 @@ void Game::SetupPBRMaterial(
 	MaterialsPBR.push_back(mat);
 }
 
-// --------------------------------------------------------
-// Loads shaders from compiled shader object (.cso) files
-// and also created the Input Layout that describes our 
-// vertex data to the rendering pipeline. 
-// - Input Layout creation is done here because it must 
-//    be verified against vertex shader byte code
-// - We'll have that byte code already loaded below
-// --------------------------------------------------------
+
 void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context,
@@ -333,10 +338,6 @@ void Game::LoadShaders()
 	
 }
 
-
-// --------------------------------------------------------
-// Creates the geometry we're going to draw - a single triangle for now
-// --------------------------------------------------------
 void Game::CreateGeometry()
 {
 	D3D11_SAMPLER_DESC sampDesc = {};
@@ -432,6 +433,7 @@ void Game::CreateGeometry()
 		1.0f,
 		DirectX::XMFLOAT2(0, 0), 
 		vertexShader, schlickShader);
+
 
 	std::shared_ptr<Sky> sky = std::make_shared<Sky>(
 		device,
@@ -564,7 +566,6 @@ void Game::CreateGeometry()
 	#pragma endregion
 }
 
-
 void Game::CreateCameras()
 {
 	std::vector<std::shared_ptr<Camera>> cameras = std::vector<std::shared_ptr<Camera>>();
@@ -610,7 +611,6 @@ void Game::CreateCameras()
 	animScene->SetCameras(cameras);
 	shadowScene->SetCameras(cameras);
 }
-
 
 void Game::LoadShadowResources()
 {
@@ -728,11 +728,6 @@ void Game::AnimSceneLogic(float deltaTime)
 	
 }
 
-// --------------------------------------------------------
-// Handle resizing to match the new window size.
-//  - DXCore needs to resize the back buffer
-//  - Eventually, we'll want to update our 3D camera
-// --------------------------------------------------------
 void Game::OnResize()
 {
 	// Handle base-level DX resize stuff
@@ -853,9 +848,6 @@ void Game::UpdateImGui(float deltaTime)
 	/*int type = sceneGui->CreateCurveGuiWithDropDown();*/
 }
 
-// --------------------------------------------------------
-// Update your game here - user input, move objects, AI, etc.
-// --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
 	UpdateImGui(deltaTime);
@@ -879,9 +871,6 @@ void Game::Update(float deltaTime, float totalTime)
 		Quit();
 }
 
-// --------------------------------------------------------
-// Clear the screen, redraw everything, present to the user
-// --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
 	// Frame START

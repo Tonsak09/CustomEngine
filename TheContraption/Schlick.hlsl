@@ -17,20 +17,22 @@
 		- Dithering 
 */
 
-#pragma region TEXTURES
 Texture2D Albedo		: register(t0); 
 Texture2D NormalMap		: register(t1);
 Texture2D RoughnessMap	: register(t2);
 Texture2D MetalnessMap	: register(t3);
 TextureCube Environment : register(t4);
 Texture2D ShadowMap		: register(t5); 
-Texture2D Dither		: register(t6);
-#pragma endregion
 
-#pragma region SAMPLER 
-SamplerState BasicSampler : register(s0);
-SamplerComparisonState ShadowSampler : register(s1);
-#pragma endregion 
+// Dithers 
+Texture2D Dither1	: register(t6);
+Texture2D Dither2	: register(t7);
+Texture2D Dither3	: register(t8);
+Texture2D Dither4	: register(t9);
+Texture2D Dither5	: register(t10);
+
+SamplerState BasicSampler				: register(s0);
+SamplerComparisonState ShadowSampler	: register(s1);
 
 cbuffer ExternalData : register(b0)
 {
@@ -47,7 +49,6 @@ cbuffer ExternalData : register(b0)
 	float aspect;
 }
 
-#pragma region GETTERS
 float2 GetUV(VertexToPixel input)
 {
 	return input.uv + uvOffset;
@@ -73,24 +74,8 @@ float3 GetSpec(VertexToPixel input)
 {
 	return lerp(F0_NON_METAL, GetAlbedo(input).rgb, GetMetalness(input));
 }
-#pragma endregion 
 
-//void DitherLogic(VertexToPixel input, float attenuate)
-//{
-//	// Screenspace 
-//	float2 textureCoordinate = input.screenPos.xy / input.screenPos.w; 
-//	textureCoordinate.x = textureCoordinate.x * aspect;
-//
-//	float ditherCull = lerp(1, Dither.Sample(BasicSampler, textureCoordinate * 20.0f).x, ditherLevel);
-//	float cullByAttenuate = lerp(1, ditherCull, attenuate);
-//	if (ditherCull < 0.9f) // Not within range 
-//	{
-//		discard;
-//	}
-//	//else if(cullByAttenuate < )
-//}
 
-#pragma region LIGHTS_LOGIC
 /// <summary>
 /// Lowers light strength over distance 
 /// </summary>
@@ -136,7 +121,40 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 
 	float atten = Attenuate(light, input.worldPosition);
 
-	DitherLogic(input, Dither, BasicSampler, atten, aspect, ditherLevel);
+
+
+
+
+	// Apply dither pattern if within the point lights radius 
+	
+	// TEMP FOR DEBUG 
+	float toEdgeLerp = abs(difference) / light.range;
+	int key = toEdgeLerp / (1.0f/5.0f); // Break 0-1 scale into amount of dither sections 
+
+	// Change dither pattern 
+	switch (key)
+	{
+	case 0:
+		DitherLogic(input, Dither1, BasicSampler, aspect, ditherLevel);
+		break;
+	case 1:
+		DitherLogic(input, Dither2, BasicSampler, aspect, ditherLevel);
+		break;
+	case 2:
+		DitherLogic(input, Dither3, BasicSampler, aspect, ditherLevel);
+		break;
+	case 3:
+		DitherLogic(input, Dither4, BasicSampler, aspect, ditherLevel);
+		break;
+	case 4:
+		DitherLogic(input, Dither5, BasicSampler, aspect, ditherLevel);
+		break;
+	}
+
+
+
+
+
 
 	float3 diffuse = saturate(dot(input.normal, lightDir));
 	float3 F;
@@ -148,7 +166,6 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 
 	return total;
 }
-#pragma endregion 
 
 
 float4 main(VertexToPixel input) : SV_TARGET
@@ -164,13 +181,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 	{
 		discard;
 	}
+
+
+
+	// SHADOWS
 	
-	#pragma region DITHERING
-	//DitherLogic(input, 0.5f);
-
-	#pragma endregion
-
-	#pragma region SHADOWS
 	// Perform the perspective divide (divide by W) ourselves
 	input.shadowMapPos /= input.shadowMapPos.w;
 	// Convert the normalized device coordinates to UVs for sampling
@@ -185,10 +200,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 		ShadowSampler,
 		shadowUV,
 		distToLight).r;
-	#pragma endregion
 
-	#pragma region NORMALS
-	// Normals 
+
+
+
+
+	
+	// NORMALS 
+
 	float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv).rgb * 2 - 1;
 	unpackedNormal = normalize(unpackedNormal);
 
@@ -201,9 +220,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	// Assumes that input.normal is the normal later in the shader
 	input.normal = mul(unpackedNormal, TBN); // Note multiplication order!
-	#pragma endregion
 
-	#pragma region LIGHTS
+
+
+
+
+	// LIGHTS 
+	
 	// Dir lights 
 	float3 light1 = DirLight(directionalLight1, input, roughness, metalness, albedo, specColor);
 	light1 *= shadowAmount;
@@ -215,13 +238,21 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 light5 = PointLight(pointLight2, input, roughness, metalness, albedo, specColor);
 
 	float3 totalLight = light1 + light2 + light3 + light4 + light5;
-	#pragma endregion
 
-	#pragma region ENVIRONMENT
+
+
+
+
+	// ENVIRONMENT 
+
 	float3 viewVector = normalize(camPos - input.worldPosition);
 	float3 reflectionVector = reflect(-viewVector, input.normal); // Need camera to pixel vector, so negate
 	float3 reflectionColor = Environment.Sample(BasicSampler, reflectionVector).rgb;
-	#pragma endregion
+
+
+
+
+
 
 	// Alpha correction 
 	// 0.04f is recommended amount 
