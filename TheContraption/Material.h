@@ -59,6 +59,12 @@ public:
 	void SetRoughness(float nextRoughness);
 
 	/// <summary>
+	/// Set this material's current dither level 
+	/// </summary>
+	/// <param name="nextDither"></param>
+	void SetDither(float nextDither);
+
+	/// <summary>
 	/// Set this material's current uv offset 
 	/// </summary>
 	/// <param name="nextOffset"></param>

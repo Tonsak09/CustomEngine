@@ -21,14 +21,7 @@
 // For the DirectX Math library
 using namespace DirectX;
 
-// --------------------------------------------------------
-// Constructor
-//
-// DXCore (base class) constructor will set up underlying fields.
-// Direct3D itself, and our window, are not ready at this point!
-//
-// hInstance - the application's OS-level handle (unique ID)
-// --------------------------------------------------------
+
 Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,			// The application's handle
@@ -410,15 +403,15 @@ void Game::CreateGeometry()
 
 	// PBR's 
 	schlickBricks = std::make_shared<Material>(
-		DirectX::XMFLOAT4(1, 1, 1, 1), 
-		0.5f, 
-		1.0f,
-		DirectX::XMFLOAT2(0, 0), 
-		vertexShader, schlickShader);
+		DirectX::XMFLOAT4(1, 1, 1, 1),				// Tint
+		0.5f, 										// Roughness
+		ditherAmount,										// Dither? 
+		DirectX::XMFLOAT2(0, 0), 					// UV Offset
+		vertexShader, schlickShader);				// Vertex and Pixel Shaders 
 	rough = std::make_shared<Material>(
 		DirectX::XMFLOAT4(1, 1, 1, 1), 
 		0.5f, 
-		1.0f,
+		ditherAmount,
 		DirectX::XMFLOAT2(0, 0), 
 		vertexShader, schlickShader);
 	wood = std::make_shared<Material>(
@@ -430,7 +423,7 @@ void Game::CreateGeometry()
 	schlickBronze = std::make_shared<Material>(
 		DirectX::XMFLOAT4(1, 1, 1, 1), 
 		0.5f, 
-		1.0f,
+		ditherAmount,
 		DirectX::XMFLOAT2(0, 0), 
 		vertexShader, schlickShader);
 
@@ -807,7 +800,22 @@ void Game::UpdateImGui(float deltaTime)
 		ImGui::TreePop();
 	}
 	
-	
+	if (ImGui::TreeNode("Dither"))
+	{
+		static bool haveDither;
+		if (ImGui::Checkbox("Dither in Point Lights?", &haveDither))
+		{
+			ditherAmount = (float)haveDither;
+
+			for (int i = 0; i < MaterialsPBR.size(); i++)
+			{
+				MaterialsPBR[i]->SetDither(ditherAmount);
+			}
+		}
+
+		ImGui::TreePop();
+	}
+
 	// Scene specific gui
 	switch (currentScene)
 	{
@@ -935,6 +943,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
 	{
+		// Unbind shadowmap 
+		ID3D11ShaderResourceView* nullSRVs[128] = {};
+		context->PSSetShaderResources(0, 128, nullSRVs);
+
 		// Present the back buffer to the user
 		//  - Puts the results of what we've drawn onto the window
 		//  - Without this, the user never sees anything

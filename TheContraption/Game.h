@@ -190,4 +190,8 @@ private:
 	// Shadow Scene 
 	std::shared_ptr<Scene> shadowScene;
 	std::shared_ptr<SceneGui> shadowSceneGui;
+
+
+	// Dithering 
+	float ditherAmount; 
 };

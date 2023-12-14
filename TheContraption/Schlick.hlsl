@@ -113,6 +113,7 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 	float3 difference = light.position - input.worldPosition;
 	float mag = length(difference);
 
+
 	if (mag > light.range)
 		return float3(0, 0, 0);
 
@@ -128,7 +129,7 @@ float3 PointLight(Light light, VertexToPixel input, float roughness, float metal
 	// Apply dither pattern if within the point lights radius 
 	
 	// TEMP FOR DEBUG 
-	float toEdgeLerp = abs(difference) / light.range;
+	float toEdgeLerp = mag / light.range;
 	int key = toEdgeLerp / (1.0f/5.0f); // Break 0-1 scale into amount of dither sections 
 
 	// Change dither pattern 

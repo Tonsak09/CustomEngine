@@ -53,6 +53,11 @@ void Material::SetRoughness(float nextRoughness)
 	roughness = nextRoughness;
 }
 
+void Material::SetDither(float nextDither)
+{
+	ditherLevel = nextDither;
+}
+
 void Material::SetUVOffset(DirectX::XMFLOAT2 nextOffset)
 {
 	uvOffset = nextOffset;
