@@ -552,6 +552,10 @@ void Game::CreateGeometry()
 	shadowEntities[3]->GetTransform()->MoveRelative(0.0f, -2.0f, 0.0f);
 	shadowEntities[3]->GetTransform()->SetScale(DirectX::XMFLOAT3(10, 1, 10));
 
+	shadowEntities.push_back(std::shared_ptr<Entity>(new Entity(quad, rough)));
+	shadowEntities[4]->GetTransform()->MoveRelative(0.0f, -10.0f, 0.0f);
+	shadowEntities[4]->GetTransform()->SetScale(DirectX::XMFLOAT3(20, 1, 20));
+
 	// Put all into scene(s)
 	shadowScene->SetEntities(shadowEntities);
 	shadowScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
