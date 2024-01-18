@@ -191,6 +191,9 @@ private:
 	std::shared_ptr<Scene> shadowScene;
 	std::shared_ptr<SceneGui> shadowSceneGui;
 
+	// Skeletal Animation Scene 
+	std::shared_ptr<Scene> skeleScene;
+	std::shared_ptr<SceneGui> skeleSceneGui;
 
 	// Dithering 
 	float ditherAmount; 

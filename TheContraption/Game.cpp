@@ -67,12 +67,17 @@ void Game::Init()
 	shadowScene = std::make_shared<Scene>("Shadow");
 	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
 
+	skeleScene = std::make_shared<Scene>("Skeletal Anim");
+	skeleSceneGui = std::make_shared<SceneGui>(skeleScene);
+
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
 	scenes.push_back(shadowScene);
+	scenes.push_back(skeleScene);
 	sceneGuis.push_back(sceneGui);
 	sceneGuis.push_back(animSceneGui);
 	sceneGuis.push_back(shadowSceneGui);
+	sceneGuis.push_back(skeleSceneGui);
 
 
 	currentGUI = 0; currentScene = SCENE_SHADOWS;
@@ -106,7 +111,6 @@ void Game::Init()
 // Ensure the pipeline knows how to interpret all the numbers stored in
 // the vertex buffer. For this course, all of your vertices will probably
 // have the same layout, so we can just set this once at startup.
-//context->IASetInputLayout(inputLayout.Get());
 	}
 
 	// Initialize ImGui
@@ -441,9 +445,14 @@ void Game::CreateGeometry()
 		L"../../Assets/Textures/Skies/Planet/back.png"
 		);
 
-	scene->SetSky(sky);
+	/*scene->SetSky(sky);
 	animScene->SetSky(sky);
-	shadowScene->SetSky(sky);
+	shadowScene->SetSky(sky);*/
+
+	for (std::shared_ptr<Scene> scene : scenes)
+	{
+		scene->SetSky(sky);
+	}
 
 	// Create materials 
 	SetupLitMaterial(
@@ -604,9 +613,15 @@ void Game::CreateCameras()
 		this->windowWidth / this->windowHeight	// Aspect ratio 
 		));
 
-	scene->SetCameras(cameras);
-	animScene->SetCameras(cameras);
-	shadowScene->SetCameras(cameras);
+	//scene->SetCameras(cameras);
+	//animScene->SetCameras(cameras);
+	//shadowScene->SetCameras(cameras);
+
+	for (std::shared_ptr<Scene> scene : scenes)
+	{
+		scene->SetCameras(cameras);
+	}
+
 }
 
 void Game::LoadShadowResources()
