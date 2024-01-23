@@ -7,6 +7,9 @@
 #include "Mesh.h"
 #include "Transform.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 // Assumes files are in "ImGui" subfolder!
 // Adjust path as necessary
@@ -338,7 +341,7 @@ void Game::LoadShaders()
 void Game::CreateGeometry()
 {
 	D3D11_SAMPLER_DESC sampDesc = {};
-
+	Assimp::Importer imp;
 	// How to handles uvs going outside of range 
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
