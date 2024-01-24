@@ -341,7 +341,7 @@ void Game::LoadShaders()
 void Game::CreateGeometry()
 {
 	D3D11_SAMPLER_DESC sampDesc = {};
-	Assimp::Importer imp;
+	
 	// How to handles uvs going outside of range 
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -360,6 +360,13 @@ void Game::CreateGeometry()
 	device.Get()->CreateSamplerState(&sampDesc, sampler.GetAddressOf());
 	
 	#pragma region MODELS
+
+	Assimp::Importer imp;
+	auto model = imp.ReadFile("Assets/Models/blendybot.fbx", // Begins at solution? 
+		aiProcess_Triangulate | 
+		aiProcess_JoinIdenticalVertices
+	);
+	printf(model->hasSkeletons() ? "True" : "False");
 
 	// General Models 
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
