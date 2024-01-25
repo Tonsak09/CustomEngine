@@ -83,7 +83,7 @@ void Game::Init()
 	sceneGuis.push_back(skeleSceneGui);
 
 
-	currentGUI = 0; currentScene = SCENE_SHADOWS;
+	currentGUI = 0; currentScene = SCENE_SKELE;
 
 	// Defaults 
 	eyeSepTime = 1.5f;
@@ -361,12 +361,7 @@ void Game::CreateGeometry()
 	
 	#pragma region MODELS
 
-	Assimp::Importer imp;
-	auto model = imp.ReadFile("Assets/Models/blendybot.fbx", // Begins at solution? 
-		aiProcess_Triangulate | 
-		aiProcess_JoinIdenticalVertices
-	);
-	printf(model->hasSkeletons() ? "True" : "False");
+	
 
 	// General Models 
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
@@ -578,6 +573,71 @@ void Game::CreateGeometry()
 	// Put all into scene(s)
 	shadowScene->SetEntities(shadowEntities);
 	shadowScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+
+	#pragma endregion
+
+	#pragma region SKELE_SCENE_ENTITIES
+
+	Assimp::Importer imp;
+	auto model = imp.ReadFile("Assets/Models/y_bot.fbx", // Begins at solution? 
+		aiProcess_Triangulate |
+		aiProcess_JoinIdenticalVertices
+	);
+	printf(model->hasSkeletons() ? "True" : "False");
+
+
+	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
+
+	int maxCount = 15;
+	int counter = 0;
+	while (counter <= 15)
+	{
+		counter++;
+
+		model->mRootNode->mChildren[0]->mTransformation.a4;
+		model->mRootNode->mChildren[0]->mTransformation.b4;
+		model->mRootNode->mChildren[0]->mTransformation.c4;
+		model->mRootNode->mChildren[0]->mTransformation.d4;
+	}
+
+	// Add all entites to the primary vector 
+
+	// Recursivlley travels the bones
+	auto recur = [&](auto&& recur, aiNode* node) {
+		printf(node->mName.C_Str());
+
+		aiVector3D rot;
+		aiVector3D pos;
+		aiVector3D sca;
+		node->mTransformation.Decompose(sca, rot, pos);
+
+		skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+		skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+
+		if (node->mNumChildren == 0)
+			return;
+
+		for (int i = 0; i < node->mNumChildren; i++)
+		{
+			recur(recur, node->mChildren[i]);
+		}
+		
+
+		//return pos;
+	}; // end of lambda expression
+
+	recur(recur, model->mRootNode);
+
+	/*skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+	skelyEnts[1]->GetTransform()->SetPosition(
+		model->mRootNode->mChildren[0]->mTransformation.a4,
+		model->mRootNode->mChildren[0]->mTransformation.b4,
+		model->mRootNode->mChildren[0]->mTransformation.c4,
+	);*/
+
+	// Put all into scene(s)
+	skeleScene->SetEntities(skelyEnts);
+	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 	#pragma endregion
 }

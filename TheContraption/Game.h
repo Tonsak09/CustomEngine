@@ -8,6 +8,7 @@
 #define SCENE_PRIMARY 0
 #define SCENE_ANIM 1
 #define SCENE_SHADOWS 2
+#define SCENE_SKELE 3
 
 #define SHADOW_MAP_RESOLUTION 1024
 
