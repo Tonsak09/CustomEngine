@@ -370,6 +370,7 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/torus.obj").c_str());
 	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/quad_double_sided.obj").c_str());
 	std::shared_ptr<Mesh> lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
+	
 
 	// Setup mec eye 
 	std::shared_ptr<Mesh> connectionA = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/MecEye/ConnectionA.obj").c_str());
@@ -578,33 +579,60 @@ void Game::CreateGeometry()
 
 	#pragma region SKELE_SCENE_ENTITIES
 
-	Assimp::Importer imp;
-	auto model = imp.ReadFile("Assets/Models/y_bot.fbx", // Begins at solution? 
-		aiProcess_Triangulate |
-		aiProcess_JoinIdenticalVertices
-	);
-	printf(model->hasSkeletons() ? "True" : "False");
+	// Set the import flags
+	unsigned int flags = aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate;
+		
+		/*aiProcess_Triangulate |
+		aiProcess_GenSmoothNormals |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_SortByPType |
+		aiProcess_LimitBoneWeights |
+		aiProcess_ImproveCacheLocality |
+		aiProcess_RemoveRedundantMaterials |
+		aiProcess_FindDegenerates |
+		aiProcess_FindInvalidData |
+		aiProcess_OptimizeMeshes |
+		aiProcess_OptimizeGraph |
+		aiProcess_FlipUVs;*/
 
+	// Add flags for importing skeletons and animations
+	flags |= aiProcessPreset_TargetRealtime_MaxQuality;
 
+	Assimp::Importer imp; // File path begins at solution 
+	auto yBot = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
+	printf(yBot->hasSkeletons() ? "True" : "False");
+	printf("%i", yBot->mNumSkeletons);
+
+	//yBot.
 	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
-
-	int maxCount = 15;
-	int counter = 0;
-	while (counter <= 15)
-	{
-		counter++;
-
-		model->mRootNode->mChildren[0]->mTransformation.a4;
-		model->mRootNode->mChildren[0]->mTransformation.b4;
-		model->mRootNode->mChildren[0]->mTransformation.c4;
-		model->mRootNode->mChildren[0]->mTransformation.d4;
-	}
 
 	// Add all entites to the primary vector 
 
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node) {
 		printf(node->mName.C_Str());
+		printf(":	");
+		printf("%i", node->mNumMeshes);
+		printf("\n");
+
+		if (node->mNumMeshes > 0)
+		{
+			printf("%i", yBot->mMeshes[node->mMeshes[0]]->mNumBones);
+			printf("\n");
+		}
+
+
+		/*if (node->mNumMeshes > 0) {
+			for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+				unsigned int meshIndex = node->mMeshes[i];
+				aiMesh* mesh = scene->mMeshes[meshIndex];
+
+				for (unsigned int j = 0; j < mesh->mNumBones; ++j) {
+					aiBone* bone = mesh->mBones[j];
+					std::cout << "  Bone: " << bone->mName.C_Str() << std::endl;
+				}
+			}
+		}*/
 
 		aiVector3D rot;
 		aiVector3D pos;
@@ -613,6 +641,7 @@ void Game::CreateGeometry()
 
 		skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 		skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+		skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.1f);
 
 		if (node->mNumChildren == 0)
 			return;
@@ -621,19 +650,9 @@ void Game::CreateGeometry()
 		{
 			recur(recur, node->mChildren[i]);
 		}
-		
-
-		//return pos;
 	}; // end of lambda expression
 
-	recur(recur, model->mRootNode);
-
-	/*skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-	skelyEnts[1]->GetTransform()->SetPosition(
-		model->mRootNode->mChildren[0]->mTransformation.a4,
-		model->mRootNode->mChildren[0]->mTransformation.b4,
-		model->mRootNode->mChildren[0]->mTransformation.c4,
-	);*/
+	recur(recur, yBot->mRootNode);
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
