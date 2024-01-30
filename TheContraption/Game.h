@@ -192,9 +192,17 @@ private:
 	std::shared_ptr<Scene> shadowScene;
 	std::shared_ptr<SceneGui> shadowSceneGui;
 
+	#pragma region SKELE_SCENE
+
 	// Skeletal Animation Scene 
 	std::shared_ptr<Scene> skeleScene;
 	std::shared_ptr<SceneGui> skeleSceneGui;
+
+	// Used to display the skeleton's bone wireframe 
+	std::shared_ptr<Vertex[]> skeleVerteicies; 
+	std::shared_ptr<unsigned int[]> skeleIndicies;
+
+	#pragma endregion
 
 	// Dithering 
 	float ditherAmount; 

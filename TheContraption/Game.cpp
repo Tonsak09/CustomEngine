@@ -362,7 +362,6 @@ void Game::CreateGeometry()
 	#pragma region MODELS
 
 	
-
 	// General Models 
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
 	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/helix.obj").c_str());
@@ -615,24 +614,20 @@ void Game::CreateGeometry()
 		printf("%i", node->mNumMeshes);
 		printf("\n");
 
+		// Iterate through a node's meshes and then set all the bones 
 		if (node->mNumMeshes > 0)
 		{
-			printf("%i", yBot->mMeshes[node->mMeshes[0]]->mNumBones);
+			printf("\n");
+			for (int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
+			{
+				// TODO: Add bone position to skele verticies and indicies to create a custom mesh that
+				// we will render using D3D11_PRIMITIVE_TOPOLOGY_LINELIST 
+				printf(yBot->mMeshes[node->mMeshes[0]]->mBones[i]->mName.C_Str());
+				printf("\n");
+			}
+			
 			printf("\n");
 		}
-
-
-		/*if (node->mNumMeshes > 0) {
-			for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
-				unsigned int meshIndex = node->mMeshes[i];
-				aiMesh* mesh = scene->mMeshes[meshIndex];
-
-				for (unsigned int j = 0; j < mesh->mNumBones; ++j) {
-					aiBone* bone = mesh->mBones[j];
-					std::cout << "  Bone: " << bone->mName.C_Str() << std::endl;
-				}
-			}
-		}*/
 
 		aiVector3D rot;
 		aiVector3D pos;
@@ -1045,8 +1040,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		scenes[currentScene]->DrawSky(context);
 	}
 
-	
-	
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
