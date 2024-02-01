@@ -40,6 +40,37 @@ Game::Game(HINSTANCE hInstance)
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 
 #endif
+
+	scene = std::make_shared<Scene>("General");
+	sceneGui = std::make_shared<SceneGui>(scene);
+
+	animScene = std::make_shared<Scene>("Anim");
+	animSceneGui = std::make_shared<SceneGui>(animScene);
+	animManager = std::make_shared<BasicAnimationManager>();
+
+	shadowScene = std::make_shared<Scene>("Shadow");
+	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
+
+	skeleScene = std::make_shared<Scene>("Skeletal Anim");
+	skeleSceneGui = std::make_shared<SceneGui>(skeleScene);
+
+	ditherAmount = 0.0f;
+
+	currentGUI = 0; currentScene = SCENE_SKELE;
+
+	// Defaults 
+	eyeSepTime = 1.5f;
+	eyeSepCurve = EASE_OUT_ELASTIC;
+	eyeComTime = 1.0f;
+	eyeComCurve = EASE_IN_BOUNCE;
+
+	startAnimation = EASE_IN_BACK;
+
+	buttonCooldown = 2.0f;
+
+	skeleVerteicies = std::make_shared<std::vector<Vertex>>();
+	skeleIndicies = std::make_shared<std::vector<unsigned int>>();
+
 }
 
 Game::~Game()
@@ -60,19 +91,6 @@ Game::~Game()
 
 void Game::Init()
 {
-	scene = std::make_shared<Scene>("General");
-	sceneGui = std::make_shared<SceneGui>(scene);
-
-	animScene = std::make_shared<Scene>("Anim");
-	animSceneGui = std::make_shared<SceneGui>(animScene);
-	animManager = std::make_shared<BasicAnimationManager>();
-
-	shadowScene = std::make_shared<Scene>("Shadow");
-	shadowSceneGui = std::make_shared<SceneGui>(shadowScene);
-
-	skeleScene = std::make_shared<Scene>("Skeletal Anim");
-	skeleSceneGui = std::make_shared<SceneGui>(skeleScene);
-
 	scenes.push_back(scene);
 	scenes.push_back(animScene);
 	scenes.push_back(shadowScene);
@@ -81,20 +99,6 @@ void Game::Init()
 	sceneGuis.push_back(animSceneGui);
 	sceneGuis.push_back(shadowSceneGui);
 	sceneGuis.push_back(skeleSceneGui);
-
-
-	currentGUI = 0; currentScene = SCENE_SKELE;
-
-	// Defaults 
-	eyeSepTime = 1.5f;
-	eyeSepCurve = EASE_OUT_ELASTIC;
-	eyeComTime = 1.0f;
-	eyeComCurve = EASE_IN_BOUNCE;
-
-	buttonCooldown = 2.0f;
-
-	skeleVerteicies = std::make_shared<std::vector<Vertex>>();
-	skeleIndicies = std::make_shared<std::vector<unsigned int>>();
 
 	LoadLights();
 	LoadShaders();
@@ -140,50 +144,50 @@ void Game::LoadLights()
 	#pragma region scene1
 	std::vector<std::shared_ptr<Light>> lights = std::vector<std::shared_ptr<Light>>();
 
-		directionalLight1 = {};
-		directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-		directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
-		directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
-		directionalLight1.intensity = 1.0;
-		directionalLight1.hasShadows = true;
-		lights.push_back(std::make_shared<Light>(directionalLight1));
+	directionalLight1 = {};
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.directiton = DirectX::XMFLOAT3(1, -1, 0);
+	directionalLight1.color = DirectX::XMFLOAT3(0.2f, 0.2f, 0.2f);
+	directionalLight1.intensity = 1.0;
+	directionalLight1.hasShadows = true;
+	lights.push_back(std::make_shared<Light>(directionalLight1));
 
-		directionalLight2 = {};
-		directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
-		directionalLight2.directiton = DirectX::XMFLOAT3(0, -1, 0);
-		directionalLight2.color = DirectX::XMFLOAT3(1, 1, 1);
-		directionalLight2.intensity = 1.0;
-		directionalLight1.hasShadows = false;
-		lights.push_back(std::make_shared<Light>(directionalLight2));
+	directionalLight2 = {};
+	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.directiton = DirectX::XMFLOAT3(0, -1, 0);
+	directionalLight2.color = DirectX::XMFLOAT3(1, 1, 1);
+	directionalLight2.intensity = 1.0;
+	directionalLight1.hasShadows = false;
+	lights.push_back(std::make_shared<Light>(directionalLight2));
 
-		directionalLight3 = {};
-		directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
-		directionalLight3.directiton = DirectX::XMFLOAT3(-0.2f, 1, 0);
-		directionalLight3.color = DirectX::XMFLOAT3(0, 1, 0);
-		directionalLight3.intensity = 1.0;
-		directionalLight1.hasShadows = false;
-		lights.push_back(std::make_shared<Light>(directionalLight3));
+	directionalLight3 = {};
+	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight3.directiton = DirectX::XMFLOAT3(-0.2f, 1, 0);
+	directionalLight3.color = DirectX::XMFLOAT3(0, 1, 0);
+	directionalLight3.intensity = 1.0;
+	directionalLight1.hasShadows = false;
+	lights.push_back(std::make_shared<Light>(directionalLight3));
 
-		pointLight1 = {};
-		pointLight1.type = LIGHT_TYPE_POINT;
-		pointLight1.position = DirectX::XMFLOAT3(2, 2, 0);
-		pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
-		pointLight1.intensity = 1.0;
-		pointLight1.range = 40.0;
-		directionalLight1.hasShadows = false;
-		lights.push_back(std::make_shared<Light>(pointLight1));
+	pointLight1 = {};
+	pointLight1.type = LIGHT_TYPE_POINT;
+	pointLight1.position = DirectX::XMFLOAT3(2, 2, 0);
+	pointLight1.color = DirectX::XMFLOAT3(0, 1, 0);
+	pointLight1.intensity = 1.0;
+	pointLight1.range = 40.0;
+	directionalLight1.hasShadows = false;
+	lights.push_back(std::make_shared<Light>(pointLight1));
 
-		pointLight2 = {};
-		pointLight2.type = LIGHT_TYPE_POINT;
-		pointLight2.position = DirectX::XMFLOAT3(1, -3, 0);
-		pointLight2.color = DirectX::XMFLOAT3(0, 0, 1);
-		pointLight2.intensity = 1.0;
-		pointLight2.range = 100.0;
-		directionalLight1.hasShadows = false;
-		lights.push_back(std::make_shared<Light>(pointLight2));
+	pointLight2 = {};
+	pointLight2.type = LIGHT_TYPE_POINT;
+	pointLight2.position = DirectX::XMFLOAT3(1, -3, 0);
+	pointLight2.color = DirectX::XMFLOAT3(0, 0, 1);
+	pointLight2.intensity = 1.0;
+	pointLight2.range = 100.0;
+	directionalLight1.hasShadows = false;
+	lights.push_back(std::make_shared<Light>(pointLight2));
 
-		// Set the scene's lights 
-		scene->SetLights(lights);
+	// Set the scene's lights 
+	scene->SetLights(lights);
 	#pragma endregion
 
 	#pragma region AnimScene
@@ -315,7 +319,7 @@ void Game::SetupPBRMaterial(
 	}
 
 
-	DirectX::XMFLOAT2 ratio(this->windowWidth, this->windowHeight);
+	DirectX::XMFLOAT2 ratio((float)this->windowWidth, (float)this->windowHeight);
 	mat.get()->GetPixelShader()->SetData("screenSize", &ratio, sizeof(float));
 
 	MaterialsPBR.push_back(mat);
@@ -642,7 +646,8 @@ void Game::CreateGeometry()
 					mesh->mTangents[vertexCounter].y,
 					mesh->mTangents[vertexCounter].z
 				);
-				vert.UV = DirectX::XMFLOAT2(0, 0);
+				vert.UV = DirectX::XMFLOAT2((float)mesh->mNumUVComponents[0], (float)mesh->mNumUVComponents[1]);
+				//printf("Number of UV Channels: %i", );
 
 				skeleVerteicies->push_back(vert);
 
@@ -651,19 +656,19 @@ void Game::CreateGeometry()
 			printf("\n");
 
 			// Indicies 
-			for (int f = 0; f < mesh->mNumFaces; f++)
+			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
 			{
-				auto face = mesh->mFaces[f];
+				aiFace face = mesh->mFaces[f];
 
 				indexCounter += mesh->mFaces[f].mNumIndices;
-				for (int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
+				for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
 				{
 					skeleIndicies->push_back(face.mIndices[i]);
 				}
 			}
 			
 			// Bones
-			for (int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
+			for (unsigned int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
 			{
 				auto bone = yBot->mMeshes[node->mMeshes[0]]->mBones[i];
 				
@@ -691,7 +696,7 @@ void Game::CreateGeometry()
 		if (node->mNumChildren == 0)
 			return;
 
-		for (int i = 0; i < node->mNumChildren; i++)
+		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
 			recur(recur, node->mChildren[i]);
 		}

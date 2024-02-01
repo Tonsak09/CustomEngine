@@ -20,6 +20,9 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<I
 //
 // - NOTE: You'll need to #include <fstream>
 
+	vertexCount = 0;
+	indicesCount = 0;
+
 
 // File input object
 	std::ifstream obj(objFile);
