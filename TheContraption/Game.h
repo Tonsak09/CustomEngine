@@ -199,8 +199,8 @@ private:
 	std::shared_ptr<SceneGui> skeleSceneGui;
 
 	// Used to display the skeleton's bone wireframe 
-	std::shared_ptr<Vertex[]> skeleVerteicies; 
-	std::shared_ptr<unsigned int[]> skeleIndicies;
+	std::shared_ptr<std::vector<Vertex>> skeleVerteicies; 
+	std::shared_ptr<std::vector<unsigned int>> skeleIndicies;
 
 	#pragma endregion
 

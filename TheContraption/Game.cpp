@@ -93,7 +93,8 @@ void Game::Init()
 
 	buttonCooldown = 2.0f;
 
-
+	skeleVerteicies = std::make_shared<std::vector<Vertex>>();
+	skeleIndicies = std::make_shared<std::vector<unsigned int>>();
 
 	LoadLights();
 	LoadShaders();
@@ -599,14 +600,15 @@ void Game::CreateGeometry()
 
 	Assimp::Importer imp; // File path begins at solution 
 	auto yBot = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
-	printf(yBot->hasSkeletons() ? "True" : "False");
-	printf("%i", yBot->mNumSkeletons);
+	int indexCounter = 0;
 
 	//yBot.
 	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
 
 	// Add all entites to the primary vector 
+	
 
+	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node) {
 		printf(node->mName.C_Str());
@@ -617,12 +619,59 @@ void Game::CreateGeometry()
 		// Iterate through a node's meshes and then set all the bones 
 		if (node->mNumMeshes > 0)
 		{
+			auto mesh = yBot->mMeshes[node->mMeshes[0]];
+			
+			// Set up each vertex 
+			vertexCounter = 0;
+			printf("%i", vertexCounter);
+			do
+			{
+				Vertex vert;
+				vert.Position = DirectX::XMFLOAT3(
+					mesh->mVertices[vertexCounter].x,
+					mesh->mVertices[vertexCounter].y,
+					mesh->mVertices[vertexCounter].z
+				);
+				vert.Normal = DirectX::XMFLOAT3(
+					mesh->mNormals[vertexCounter].x,
+					mesh->mNormals[vertexCounter].y,
+					mesh->mNormals[vertexCounter].z
+				);
+				vert.Tangent = DirectX::XMFLOAT3(
+					mesh->mTangents[vertexCounter].x,
+					mesh->mTangents[vertexCounter].y,
+					mesh->mTangents[vertexCounter].z
+				);
+				vert.UV = DirectX::XMFLOAT2(0, 0);
+
+				skeleVerteicies->push_back(vert);
+
+				vertexCounter++;
+			} while (vertexCounter < mesh->mNumVertices);
 			printf("\n");
+
+			// Indicies 
+			for (int f = 0; f < mesh->mNumFaces; f++)
+			{
+				auto face = mesh->mFaces[f];
+
+				indexCounter += mesh->mFaces[f].mNumIndices;
+				for (int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
+				{
+					skeleIndicies->push_back(face.mIndices[i]);
+				}
+			}
+			
+			// Bones
 			for (int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
 			{
+				auto bone = yBot->mMeshes[node->mMeshes[0]]->mBones[i];
+				
+
 				// TODO: Add bone position to skele verticies and indicies to create a custom mesh that
 				// we will render using D3D11_PRIMITIVE_TOPOLOGY_LINELIST 
-				printf(yBot->mMeshes[node->mMeshes[0]]->mBones[i]->mName.C_Str());
+				printf("	");
+				printf(bone->mName.C_Str());
 				printf("\n");
 			}
 			
@@ -634,9 +683,10 @@ void Game::CreateGeometry()
 		aiVector3D sca;
 		node->mTransformation.Decompose(sca, rot, pos);
 
-		skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-		skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-		skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.1f);
+		// Add's sphere at each node position 
+		//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.1f);
 
 		if (node->mNumChildren == 0)
 			return;
@@ -648,6 +698,14 @@ void Game::CreateGeometry()
 	}; // end of lambda expression
 
 	recur(recur, yBot->mRootNode);
+
+
+	std::shared_ptr<Mesh> botMesh = std::make_shared<Mesh>(device, context,
+		&(*skeleVerteicies)[0],
+		&(*skeleIndicies)[0],
+		vertexCounter, indexCounter);
+
+	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
