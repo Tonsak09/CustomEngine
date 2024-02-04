@@ -70,6 +70,8 @@ Game::Game(HINSTANCE hInstance)
 
 	skeleVerteicies = std::make_shared<std::vector<Vertex>>();
 	skeleIndicies = std::make_shared<std::vector<unsigned int>>();
+	boneVerticies = std::make_shared<std::vector<Vertex>>();
+	boneIndicies = std::make_shared<std::vector<unsigned int>>();
 
 }
 
@@ -613,8 +615,9 @@ void Game::CreateGeometry()
 	//yBot->mRootNode->mTransformation = aiMatrix4x4();
 
 
-	//yBot.
-	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
+	// Skelly scene entities 
+	std::vector<std::shared_ptr<Entity>> skelyEnts		= std::vector<std::shared_ptr<Entity>>();
+	std::vector<std::shared_ptr<Entity>> skelyDebugEnts = std::vector<std::shared_ptr<Entity>>();
 
 	// Add all entites to the primary vector 
 	
@@ -656,14 +659,11 @@ void Game::CreateGeometry()
 					mesh->mTangents[vertexCounter].y,
 					mesh->mTangents[vertexCounter].z
 				);
-				//vert.UV = DirectX::XMFLOAT2((float)mesh->mNumUVComponents[0], (float)mesh->mNumUVComponents[1]);
 				vert.UV = DirectX::XMFLOAT2(
 					(float)mesh->mTextureCoords[0][vertexCounter].x,
 					(float)mesh->mTextureCoords[0][vertexCounter].y
 				);
 
-
-				//printf("Number of UV Channels: %i", );
 
 				skeleVerteicies->push_back(vert);
 
@@ -683,23 +683,30 @@ void Game::CreateGeometry()
 				}
 			}
 
-			// Bones
-			for (unsigned int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
-			{
-				auto bone = yBot->mMeshes[node->mMeshes[0]]->mBones[i];
-				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
 
+			// Bones
+			unsigned int parentBoneIndex = 0;
+			for (unsigned int i = 0; i < mesh->mNumBones; i++)
+			{
+				auto bone = mesh->mBones[i];
+				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
+				
 				aiVector3D sca;
 				aiVector3D rot;
 				aiVector3D pos;
 				boneMatrix.Decompose(sca, rot, pos);
 
-				float disMul = 1;
+				Vertex boneVert = {};
+				boneVert.Position = DirectX::XMFLOAT3((float)pos.x, (float)pos.y, (float)pos.z);
 
+				// Sphere for each bone position 
 				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x * disMul, (float)pos.y * disMul, (float)pos.z * disMul);
-				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.01f);
+				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
 
+				boneVerticies->push_back(boneVert);
+				//boneIndicies->push_back(parentBoneIndex);
+				boneIndicies->push_back(i);
+				//boneIndicies->push_back
 
 				// TODO: Add bone position to skele verticies and indicies to create a custom mesh that
 				// we will render using D3D11_PRIMITIVE_TOPOLOGY_LINELIST 
@@ -710,16 +717,6 @@ void Game::CreateGeometry()
 
 			printf("\n");
 		}
-
-		/*aiVector3D rot;
-		aiVector3D pos;
-		aiVector3D sca;
-		node->mTransformation.Decompose(sca, rot, pos);*/
-
-		// Add's sphere at each node position 
-		//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.1f);
 
 		if (node->mNumChildren == 0)
 			return;
@@ -737,13 +734,22 @@ void Game::CreateGeometry()
 		&(*skeleVerteicies)[0],
 		&(*skeleIndicies)[0],
 		vertexCounter, indexCounter);
+	
+	std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
+		&(*boneVerticies)[0],
+		&(*boneIndicies)[0],
+		boneVerticies->size(), boneIndicies->size(), false);
 
-	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
-	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708f, 0.0f, 0.0f); // Does not set to Euler???
-	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100.0f);
+	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(DirectX::XMConvertToRadians(-90.0f), 0.0f, 0.0f);
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100.0f);
+
+	//skelyDebugEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
+	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
+	skeleScene->SetDebugEntities(skelyDebugEnts);
 	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 	#pragma endregion
@@ -1077,6 +1083,8 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::Draw(float deltaTime, float totalTime)
 {
+	
+
 	// Frame START
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
@@ -1089,49 +1097,8 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->ClearDepthStencilView(depthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-
-	if (currentScene <= 0 || currentScene >= scenes.size())
-	{
-		// Default scene 
-		/*scene->DrawShadows(
-			context, 
-			backBufferRTV,
-			depthBufferDSV,
-			shadowVS,
-			(float)this->windowWidth,
-			(float)this->windowHeight);*/
-		scene->DrawEntities(context);
-		scene->DrawLightsGui(context);
-		scene->DrawSky(context);
-	}
-	else
-	{
-		switch (currentScene)
-		{
-		case SCENE_SHADOWS:
-			scenes[currentScene]->DrawShadows(
-				context,
-				device,
-				backBufferRTV,
-				depthBufferDSV,
-				shadowVS,
-				SHADOW_MAP_RESOLUTION,
-				(float)this->windowWidth,
-				(float)this->windowHeight);
-			{
-				ID3D11ShaderResourceView* nullSRVs[128] = {};
-				context->PSSetShaderResources(0, 128, nullSRVs);
-			}
-			
-			break;
-		default:
-			break;
-		}
-		
-		scenes[currentScene]->DrawEntities(context);
-		scenes[currentScene]->DrawLightsGui(context);
-		scenes[currentScene]->DrawSky(context);
-	}
+	DrawScene(deltaTime, totalTime);
+	DrawDebug(deltaTime, totalTime);
 
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
@@ -1159,4 +1126,59 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Must re-bind buffers after presenting, as they become unbound
 		context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthBufferDSV.Get());
 	}
+}
+
+void Game::DrawScene(float deltaTime, float totalTime)
+{
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	if (currentScene <= 0 || currentScene >= scenes.size())
+	{
+		// Default scene 
+		/*scene->DrawShadows(
+			context,
+			backBufferRTV,
+			depthBufferDSV,
+			shadowVS,
+			(float)this->windowWidth,
+			(float)this->windowHeight);*/
+		scene->DrawEntities(context);
+		scene->DrawLightsGui(context);
+		scene->DrawSky(context);
+	}
+	else
+	{
+		switch (currentScene)
+		{
+		case SCENE_SHADOWS:
+			scenes[currentScene]->DrawShadows(
+				context,
+				device,
+				backBufferRTV,
+				depthBufferDSV,
+				shadowVS,
+				SHADOW_MAP_RESOLUTION,
+				(float)this->windowWidth,
+				(float)this->windowHeight);
+			{
+				ID3D11ShaderResourceView* nullSRVs[128] = {};
+				context->PSSetShaderResources(0, 128, nullSRVs);
+			}
+
+			break;
+		default:
+			break;
+		}
+
+		scenes[currentScene]->DrawEntities(context);
+		scenes[currentScene]->DrawLightsGui(context);
+		scenes[currentScene]->DrawSky(context);
+	}
+}
+
+void Game::DrawDebug(float deltaTime, float totalTime)
+{
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	scenes[currentScene]->DrawDebugEntities(context);
 }

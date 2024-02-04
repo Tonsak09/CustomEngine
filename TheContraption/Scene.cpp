@@ -101,8 +101,6 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 		DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
 		entities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
 		
-		
-
 
 		// For point light 
 		float distance = 0;
@@ -159,6 +157,17 @@ void Scene::DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 	}
 }
 
+void Scene::DrawDebugEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+{
+	for (unsigned int i = 0; i < debugEntities.size(); i++)
+	{
+		DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
+		debugEntities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
+
+		entities[i]->Draw(context, cameras[currentCam]);
+	}
+}
+
 void Scene::DrawSky(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 {
 	sky->Draw(cameras[currentCam]);
@@ -189,6 +198,12 @@ void Scene::SetCameras(std::vector<std::shared_ptr<Camera>> cameras)
 void Scene::SetEntities(std::vector<std::shared_ptr<Entity>> entities)
 {
 	(*this).entities = entities;
+
+}
+
+void Scene::SetDebugEntities(std::vector<std::shared_ptr<Entity>> entities)
+{
+	(*this).debugEntities = entities;
 }
 
 void Scene::SetSky(std::shared_ptr<Sky> sky)

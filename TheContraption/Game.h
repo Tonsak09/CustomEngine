@@ -55,6 +55,8 @@ public:
 	void OnResize();
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
+	void DrawScene(float deltaTime, float totalTime);
+	void DrawDebug(float deltaTime, float totalTime);
 
 private:
 	void LoadLights();
@@ -96,6 +98,8 @@ private:
 	// Buffers to hold actual geometry data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> debugVertexBuffer;
 	
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rustyMetal;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rustyMetalSpec;
@@ -198,9 +202,13 @@ private:
 	std::shared_ptr<Scene> skeleScene;
 	std::shared_ptr<SceneGui> skeleSceneGui;
 
-	// Used to display the skeleton's bone wireframe 
+	// Used to display the mesh 
 	std::shared_ptr<std::vector<Vertex>> skeleVerteicies; 
 	std::shared_ptr<std::vector<unsigned int>> skeleIndicies;
+
+	// Used to display bone wireframe (Linelist)
+	std::shared_ptr<std::vector<Vertex>> boneVerticies;
+	std::shared_ptr<std::vector<unsigned int>> boneIndicies;
 
 	#pragma endregion
 

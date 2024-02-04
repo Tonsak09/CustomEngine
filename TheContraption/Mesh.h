@@ -30,7 +30,7 @@ public:
 	/// <summary>
 	/// Create a mesh based on manually given vertex data
 	/// </summary>
-	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext, Vertex vertices[], unsigned int indices[], int vertexCount, int indexCount);
+	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext, Vertex vertices[], unsigned int indices[], int vertexCount, int indexCount, bool constructTangents = true);
 	/// <summary>
 	/// Create a mesh based on a given obj file 
 	/// </summary>

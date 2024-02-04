@@ -43,6 +43,7 @@ public:
 		int shadowResolutionSize,
 		float windowWidth, float windowHeight);
 	void DrawEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
+	void DrawDebugEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawSky(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawLightsGui(Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 	void DrawImGui();
@@ -50,10 +51,10 @@ public:
 	void ChangeCurrentCam(int index);
 	void SetCameras(std::vector<std::shared_ptr<Camera>> cameras);
 	void SetEntities(std::vector<std::shared_ptr<Entity>> entities);
+	void SetDebugEntities(std::vector<std::shared_ptr<Entity>> entities);
 	void SetLightsAndGui(std::vector<std::tuple<std::shared_ptr<Light>, std::shared_ptr<Entity>>> lightAndGui);
 	void SetLights(std::vector<std::shared_ptr<Light>> lights);
 	void SetSky(std::shared_ptr<Sky> sky);
-
 
 	void ResizeCam(float windowWidth, float windowHeight);
 
@@ -82,6 +83,7 @@ private:
 
 	// World entities 
 	std::vector<std::shared_ptr<Entity>> entities;
+	std::vector<std::shared_ptr<Entity>> debugEntities;
 
 	std::shared_ptr<Sky> sky;
 

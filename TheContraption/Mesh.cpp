@@ -1,10 +1,11 @@
 #include "Mesh.h"
 using namespace DirectX;
 
-Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext, Vertex vertices[], unsigned int indices[], int vertexCount, int indexCount)
+Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext, Vertex vertices[], unsigned int indices[], int vertexCount, int indexCount, bool constructTangents)
 	:device(device), deviceContext(deviceContext), indicesCount(indexCount), vertexCount(vertexCount)
 {
-	CalculateTangents(&vertices[0], vertexCount, &indices[0], indexCount);
+	if(constructTangents)
+		CalculateTangents(&vertices[0], vertexCount, &indices[0], indexCount);
 	ContructVIBuffers(device, deviceContext, vertices, indices);
 }
 
