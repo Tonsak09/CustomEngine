@@ -584,7 +584,10 @@ void Game::CreateGeometry()
 	#pragma region SKELE_SCENE_ENTITIES
 
 	// Set the import flags
-	unsigned int flags = aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate;
+	unsigned int flags = 
+		aiProcessPreset_TargetRealtime_MaxQuality | 
+		aiProcess_Triangulate | 
+		aiProcess_PopulateArmatureData;
 		
 		/*aiProcess_Triangulate |
 		aiProcess_GenSmoothNormals |
@@ -605,6 +608,10 @@ void Game::CreateGeometry()
 	Assimp::Importer imp; // File path begins at solution 
 	auto yBot = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
 	int indexCounter = 0;
+	
+	// Reset transformations 
+	//yBot->mRootNode->mTransformation = aiMatrix4x4();
+
 
 	//yBot.
 	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
@@ -612,19 +619,22 @@ void Game::CreateGeometry()
 	// Add all entites to the primary vector 
 	
 
+	aiMatrix4x4 base = yBot->mRootNode->mTransformation; // TODO: Change to transform's matrix 
+
+
 	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
-	auto recur = [&](auto&& recur, aiNode* node) {
+	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) {
 		printf(node->mName.C_Str());
 		printf(":	");
 		printf("%i", node->mNumMeshes);
 		printf("\n");
-
+		
 		// Iterate through a node's meshes and then set all the bones 
-		if (node->mNumMeshes > 0)
+		for (int m = 0; m < node->mNumMeshes; m++)
 		{
-			auto mesh = yBot->mMeshes[node->mMeshes[0]];
-			
+			auto mesh = yBot->mMeshes[node->mMeshes[m]];
+
 			// Set up each vertex 
 			vertexCounter = 0;
 			printf("%i", vertexCounter);
@@ -646,7 +656,13 @@ void Game::CreateGeometry()
 					mesh->mTangents[vertexCounter].y,
 					mesh->mTangents[vertexCounter].z
 				);
-				vert.UV = DirectX::XMFLOAT2((float)mesh->mNumUVComponents[0], (float)mesh->mNumUVComponents[1]);
+				//vert.UV = DirectX::XMFLOAT2((float)mesh->mNumUVComponents[0], (float)mesh->mNumUVComponents[1]);
+				vert.UV = DirectX::XMFLOAT2(
+					(float)mesh->mTextureCoords[0][vertexCounter].x,
+					(float)mesh->mTextureCoords[0][vertexCounter].y
+				);
+
+
 				//printf("Number of UV Channels: %i", );
 
 				skeleVerteicies->push_back(vert);
@@ -666,12 +682,24 @@ void Game::CreateGeometry()
 					skeleIndicies->push_back(face.mIndices[i]);
 				}
 			}
-			
+
 			// Bones
 			for (unsigned int i = 0; i < yBot->mMeshes[node->mMeshes[0]]->mNumBones; i++)
 			{
 				auto bone = yBot->mMeshes[node->mMeshes[0]]->mBones[i];
-				
+				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
+
+				aiVector3D sca;
+				aiVector3D rot;
+				aiVector3D pos;
+				boneMatrix.Decompose(sca, rot, pos);
+
+				float disMul = 1;
+
+				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x * disMul, (float)pos.y * disMul, (float)pos.z * disMul);
+				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(0.01f);
+
 
 				// TODO: Add bone position to skele verticies and indicies to create a custom mesh that
 				// we will render using D3D11_PRIMITIVE_TOPOLOGY_LINELIST 
@@ -679,14 +707,14 @@ void Game::CreateGeometry()
 				printf(bone->mName.C_Str());
 				printf("\n");
 			}
-			
+
 			printf("\n");
 		}
 
-		aiVector3D rot;
+		/*aiVector3D rot;
 		aiVector3D pos;
 		aiVector3D sca;
-		node->mTransformation.Decompose(sca, rot, pos);
+		node->mTransformation.Decompose(sca, rot, pos);*/
 
 		// Add's sphere at each node position 
 		//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
@@ -698,11 +726,11 @@ void Game::CreateGeometry()
 
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
-			recur(recur, node->mChildren[i]);
+			recur(recur, node->mChildren[i], parentMatrix);
 		}
 	}; // end of lambda expression
 
-	recur(recur, yBot->mRootNode);
+	recur(recur, yBot->mRootNode, base);
 
 
 	std::shared_ptr<Mesh> botMesh = std::make_shared<Mesh>(device, context,
@@ -711,6 +739,8 @@ void Game::CreateGeometry()
 		vertexCounter, indexCounter);
 
 	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708f, 0.0f, 0.0f); // Does not set to Euler???
+	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100.0f);
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
