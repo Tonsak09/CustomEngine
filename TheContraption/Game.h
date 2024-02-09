@@ -74,6 +74,15 @@ private:
 	// Logic specifically for animation demonstration
 	void AnimSceneLogic(float deltaTime);
 
+	/// <summary>
+	/// Searches through every node within the scene to find a node with the 
+	/// same name as one of the mesh's bones and if it has no parent then it
+	/// has found the root. 
+	/// </summary>
+	/// <param name="scene"></param>
+	/// <returns></returns>
+	aiNode* FindRootNode(aiScene* scene, aiMesh* mesh);
+
 	// Gui - Used to tell the computer which gui to display 
 	void UpdateImGui(float deltaTime);
 

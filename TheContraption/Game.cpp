@@ -624,7 +624,6 @@ void Game::CreateGeometry()
 
 	aiMatrix4x4 base = yBot->mRootNode->mTransformation; // TODO: Change to transform's matrix 
 
-
 	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) {
@@ -691,6 +690,8 @@ void Game::CreateGeometry()
 				auto bone = mesh->mBones[i];
 				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
 				
+				printf("%i", bone->mNode->mChildren);
+
 				aiVector3D sca;
 				aiVector3D rot;
 				aiVector3D pos;
