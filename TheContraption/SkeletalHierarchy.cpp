@@ -19,32 +19,47 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		std::string name = bNode->mName.C_Str();
 
 		// Print out node parent and children 
-		printf("\t   Name: ");
+		/*printf("\t   Name: ");
 		printf(name.c_str());
 		printf("\t   Parent: ");
 		printf(bNode->mParent->mName.C_Str());
-		printf("\n");
+		printf("\n");*/
 
+		/*
+			Members may already exist since when we create
+			a member it must be attached as child to another
+			member. The only exception is the root which we
+			take care of intially. 
+			
+			Created parents that are set before they are searched 
+			for are not set with a bone or bnode member so they 
+			must be set in future when they are found. 
+		*/
 
-
-		// Does this node already exist
-		if (nameToBMember.find(bNode->mParent->mName.C_Str()) == nameToBMember.end())
+		// Does this member already exist
+		if (nameToBMember.find(name) == nameToBMember.end())
 		{
 			// Create member
-			nameToBMember[bone->mName.C_Str()] = std::make_shared<B_Member>(bone, bNode);
+			nameToBMember[name] = std::make_shared<B_Member>(bone, bNode);
 		}
 		else
 		{
 			// Set variables 
+			nameToBMember[name]->SetBone(bone);
+			nameToBMember[name]->SetBNode(bNode);
 		}
 
 
 
-		// Is this bone a root, segement, or leaf
+		// Do not continue if this is the root node 
 		if (bNode->mParent == nullptr)
+		{
+			// Current is root 
+			rootMember = nameToBMember[name];
 			return;
+		}
 
-		// Does parent exist 
+		// Does parent exist already in our hierarchy 
 		std::string parentName = bNode->mParent->mName.C_Str();
 		if (nameToBMember.find(parentName) == nameToBMember.end())
 		{
@@ -53,16 +68,9 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		}
 		
 		nameToBMember[parentName]->AddChild(nameToBMember[name]);
-
-		/*printf("\t   Name: ");
-		printf(bone->mName.C_Str());
-		printf("\t   Child Count: ");
-		printf("%i", bone->mNode->mNumChildren);
-
-		printf("\n");
-		printf("\t   NodeStatus: ");
-		printf("\n");*/
 	}
+
+	rootMember->RecurPrint();
 }
 
 /// <summary>
@@ -102,25 +110,45 @@ aiNode* SkeletalHierarchy::FindNode(aiBone* bone, aiNode** nodes, int nodeCount)
 B_Member::B_Member(aiBone* bone, aiNode* bNode) :
 	bone(bone), bNode(bNode) {};
 
-void B_Member::AddChild(std::shared_ptr<B_Member> bone)
+void B_Member::AddChild(std::shared_ptr<B_Member> member)
 {
-
+	children.push_back(member);
 }
 
 void B_Member::RemoveChild(std::shared_ptr<B_Member> child)
 {
+	std::vector<std::shared_ptr<B_Member>>::iterator it;
+	it = std::find(children.begin(), children.end(), child);
 
+	if (it != children.end())
+	{
+		children.erase(it);
+	}
 }
 
 void B_Member::SetBone(aiBone* bone)
 {
-
+	this->bone = bone;
 }
 
 void B_Member::SetBNode(aiNode* bNode)
 {
-
+	this->bNode = bNode;
 }
 
+void B_Member::RecurPrint(int layer)
+{
+	for (int i = 0; i < layer; i++)
+	{
+		printf("\t");
+	}
+
+	printf(bNode->mName.C_Str());
+
+	for (auto child : children)
+	{
+		child->RecurPrint(layer + 1);
+	}
+}
 
 #pragma endregion

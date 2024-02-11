@@ -30,7 +30,9 @@ public:
 	void SetBone(aiBone* bone);
 	void SetBNode(aiNode* bNode);
 
+	void RecurPrint(int layer = 0);
 private:
+
 	std::shared_ptr<B_Member> parent;
 	std::vector<std::shared_ptr<B_Member>> children;
 
@@ -61,5 +63,7 @@ private:
 
 	// Holds pointers to all bones 
 	std::unordered_map<std::string, std::shared_ptr<B_Member>> nameToBMember;
+
+	std::shared_ptr<B_Member > rootMember;
 };
 
