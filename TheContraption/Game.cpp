@@ -608,7 +608,7 @@ void Game::CreateGeometry()
 	flags |= aiProcessPreset_TargetRealtime_MaxQuality;
 
 	Assimp::Importer imp; // File path begins at solution 
-	auto yBot = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
+	auto importScene = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
 	int indexCounter = 0;
 	
 	// Reset transformations 
@@ -622,24 +622,24 @@ void Game::CreateGeometry()
 	// Add all entites to the primary vector 
 	
 
-	aiMatrix4x4 base = yBot->mRootNode->mTransformation; // TODO: Change to transform's matrix 
+	aiMatrix4x4 base = importScene->mRootNode->mTransformation; // TODO: Change to transform's matrix 
 
 	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
-	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) {
-		printf(node->mName.C_Str());
-		printf(":	");
-		printf("%i", node->mNumMeshes);
-		printf("\n");
+	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) 
+	{
+		//printf(node->mName.C_Str());
+		//printf(":	");
+		//printf("%i", node->mNumMeshes);
+		//printf("\n");
 		
 		// Iterate through a node's meshes and then set all the bones 
 		for (int m = 0; m < node->mNumMeshes; m++)
 		{
-			auto mesh = yBot->mMeshes[node->mMeshes[m]];
+			auto mesh = importScene->mMeshes[node->mMeshes[m]];
 
 			// Set up each vertex 
 			vertexCounter = 0;
-			printf("%i", vertexCounter);
 			do
 			{
 				Vertex vert;
@@ -684,41 +684,24 @@ void Game::CreateGeometry()
 
 
 			// Bones
-			unsigned int parentBoneIndex = 0;
+			if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
+				skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
+			
 			for (unsigned int i = 0; i < mesh->mNumBones; i++)
 			{
 				auto bone = mesh->mBones[i];
 				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
-				
-				printf("%i", bone->mNode->mChildren);
 
 				aiVector3D sca;
 				aiVector3D rot;
 				aiVector3D pos;
 				boneMatrix.Decompose(sca, rot, pos);
 
-				Vertex boneVert = {};
-				boneVert.Position = DirectX::XMFLOAT3((float)pos.x, (float)pos.y, (float)pos.z);
-
-				// Sphere for each bone position 
+				// Sphere for each bone position
 				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-
-				boneVerticies->push_back(boneVert);
-				//boneIndicies->push_back(parentBoneIndex);
-				boneIndicies->push_back(i);
-				//boneIndicies->push_back
-
-				// TODO: Add bone position to skele verticies and indicies to create a custom mesh that
-				// we will render using D3D11_PRIMITIVE_TOPOLOGY_LINELIST 
-				printf("	");
-				printf(bone->mName.C_Str());
-				printf("\n");
 			}
-
-			printf("\n");
 		}
-
 		if (node->mNumChildren == 0)
 			return;
 
@@ -728,7 +711,7 @@ void Game::CreateGeometry()
 		}
 	}; // end of lambda expression
 
-	recur(recur, yBot->mRootNode, base);
+	recur(recur, importScene->mRootNode, base);
 
 
 	std::shared_ptr<Mesh> botMesh = std::make_shared<Mesh>(device, context,
@@ -736,17 +719,12 @@ void Game::CreateGeometry()
 		&(*skeleIndicies)[0],
 		vertexCounter, indexCounter);
 	
-	std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
+	/*std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
 		&(*boneVerticies)[0],
 		&(*boneIndicies)[0],
-		boneVerticies->size(), boneIndicies->size(), false);
+		boneVerticies->size(), boneIndicies->size(), false);*/
 
-	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
-	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(DirectX::XMConvertToRadians(-90.0f), 0.0f, 0.0f);
-	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100.0f);
-
-	//skelyDebugEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
-	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
+	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
@@ -934,7 +912,7 @@ void Game::OnResize()
 	{
 		//DirectX::XMFLOAT2 ratio((float)this->windowWidth, (float)this->windowHeight);
 		float aspect((float)this->windowWidth / (float)this->windowHeight);
-		printf("%f \n", (float)this->windowWidth / (float)this->windowHeight);
+		//printf("%f \n", (float)this->windowWidth / (float)this->windowHeight);
 		MaterialsPBR[i]->GetPixelShader()->SetData(
 			"aspect", &aspect, sizeof(float)
 		);

@@ -40,6 +40,7 @@
 #include "SceneGui.h"
 
 #include "BasicAnimation.h"
+#include "SkeletonHierarchy.h"
 
 class Game 
 	: public DXCore
@@ -81,7 +82,7 @@ private:
 	/// </summary>
 	/// <param name="scene"></param>
 	/// <returns></returns>
-	aiNode* FindRootNode(aiScene* scene, aiMesh* mesh);
+	//aiNode* FindRootNode(aiScene* scene, aiMesh* mesh);
 
 	// Gui - Used to tell the computer which gui to display 
 	void UpdateImGui(float deltaTime);
@@ -218,6 +219,8 @@ private:
 	// Used to display bone wireframe (Linelist)
 	std::shared_ptr<std::vector<Vertex>> boneVerticies;
 	std::shared_ptr<std::vector<unsigned int>> boneIndicies;
+
+	std::shared_ptr<SkeletalHierarchy> skelyHierarchy;
 
 	#pragma endregion
 
