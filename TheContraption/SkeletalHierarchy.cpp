@@ -10,20 +10,13 @@ SkeletalHierarchy::SkeletalHierarchy(const aiScene* scene, aiBone** bones, int b
 void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, int boneCount)
 {
 	auto rootNode = scene->mRootNode;
-	//printf("%i", rootNode->mNumChildren);
+	std::shared_ptr<B_Member> startPoint;
 
 	for (int i = 0; i < boneCount; i++)
 	{
 		auto bone = bones[i];
 		aiNode* bNode = FindNode(bone, rootNode->mChildren, rootNode->mNumChildren);
 		std::string name = bNode->mName.C_Str();
-
-		// Print out node parent and children 
-		/*printf("\t   Name: ");
-		printf(name.c_str());
-		printf("\t   Parent: ");
-		printf(bNode->mParent->mName.C_Str());
-		printf("\n");*/
 
 		/*
 			Members may already exist since when we create
@@ -41,6 +34,11 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		{
 			// Create member
 			nameToBMember[name] = std::make_shared<B_Member>(bone, bNode);
+
+			if (startPoint == nullptr)
+			{
+				startPoint = nameToBMember[name];
+			}
 		}
 		else
 		{
@@ -50,14 +48,9 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		}
 
 
-
-		// Do not continue if this is the root node 
+		// Check if parent is not on bone list *********
 		if (bNode->mParent == nullptr)
-		{
-			// Current is root 
-			rootMember = nameToBMember[name];
 			return;
-		}
 
 		// Does parent exist already in our hierarchy 
 		std::string parentName = bNode->mParent->mName.C_Str();
@@ -70,7 +63,25 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		nameToBMember[parentName]->AddChild(nameToBMember[name]);
 	}
 
-	rootMember->RecurPrint();
+	// Can only search for 
+	rootMember = GetRoot(startPoint);
+	rootMember->RecurPrint(0);
+}
+
+/// <summary>
+/// Iterates through some starting point in the tree in order to 
+/// </summary>
+/// <returns></returns>
+std::shared_ptr<B_Member> SkeletalHierarchy::GetRoot(std::shared_ptr<B_Member> startPoint)
+{
+	std::shared_ptr<B_Member> current = startPoint;
+
+	while (current->GetParent() != nullptr)
+	{
+		current = current->GetParent();
+	}
+
+	return current;
 }
 
 /// <summary>
@@ -108,7 +119,10 @@ aiNode* SkeletalHierarchy::FindNode(aiBone* bone, aiNode** nodes, int nodeCount)
 #pragma region B_Member
 
 B_Member::B_Member(aiBone* bone, aiNode* bNode) :
-	bone(bone), bNode(bNode) {};
+	bone(bone), bNode(bNode)
+{
+	children = std::vector<std::shared_ptr<B_Member>> ();
+};
 
 void B_Member::AddChild(std::shared_ptr<B_Member> member)
 {
@@ -126,6 +140,16 @@ void B_Member::RemoveChild(std::shared_ptr<B_Member> child)
 	}
 }
 
+std::shared_ptr<B_Member> B_Member::GetParent()
+{
+	return parent;
+}
+
+std::vector<std::shared_ptr<B_Member>> B_Member::GetChildren()
+{
+	return children;
+}
+
 void B_Member::SetBone(aiBone* bone)
 {
 	this->bone = bone;
@@ -140,10 +164,11 @@ void B_Member::RecurPrint(int layer)
 {
 	for (int i = 0; i < layer; i++)
 	{
-		printf("\t");
+		printf("   ");
 	}
 
-	printf(bNode->mName.C_Str());
+	printf(bone->mName.C_Str());
+	printf("\n");
 
 	for (auto child : children)
 	{

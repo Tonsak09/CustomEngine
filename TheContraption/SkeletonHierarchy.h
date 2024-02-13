@@ -54,7 +54,7 @@ public:
 	/// <param name="bones"></param>
 	void GenerateHierachy(const aiScene* scene, aiBone** bones, int boneCount);
 
-	B_Member* GetRoot();
+	std::shared_ptr<B_Member> GetRoot(std::shared_ptr<B_Member> startPoint);
 
 	// Indexer to get by string name 
 
