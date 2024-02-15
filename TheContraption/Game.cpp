@@ -701,6 +701,13 @@ void Game::CreateGeometry()
 				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
 			}
+
+			if (skelyHierarchy != nullptr)
+			{
+				skelyHierarchy->ConstructMesh(device, context);
+				skelyDebugEnts.push_back(std::make_shared<Entity>(skelyHierarchy->GetMesh(), schlickBricks));
+			}
+			
 		}
 		if (node->mNumChildren == 0)
 			return;

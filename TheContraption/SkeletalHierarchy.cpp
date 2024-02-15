@@ -68,6 +68,7 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 	rootMember->RecurPrint(0);
 }
 
+
 /// <summary>
 /// Iterates through some starting point in the tree in order to 
 /// </summary>
@@ -82,6 +83,77 @@ std::shared_ptr<B_Member> SkeletalHierarchy::GetRoot(std::shared_ptr<B_Member> s
 	}
 
 	return current;
+}
+
+/// <summary>
+/// Gets a mesh to be drawn with D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+/// </summary>
+/// <returns></returns>
+std::shared_ptr<Mesh> SkeletalHierarchy::GetMesh()
+{
+	return mesh;
+}
+
+/// <summary>
+/// Iterate through this skeleton in order
+/// to create a mesh that can be used to
+/// render it with a line list. 
+/// </summary>
+void  SkeletalHierarchy::ConstructMesh(
+	Microsoft::WRL::ComPtr<ID3D11Device> device,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+{
+	// Create a vector of each bone 
+	std::shared_ptr<std::vector<Vertex>> verticies =		std::make_shared<std::vector<Vertex>>();
+	std::shared_ptr<std::vector<unsigned int>> indicies =	std::make_shared<std::vector<unsigned int>>();;
+
+
+	// When adding a new bone to this vector
+	// add the following two indicies to the 
+	// indicies vector. Parent index and 
+	// current index.
+
+	// Recur so each child draws themself to
+	// their child 
+	
+	
+	verticies->push_back(B_MemberToVertex(rootMember));
+	RecurConstructIndicies(rootMember, verticies, indicies);
+
+	mesh = std::make_shared<Mesh>(device, context,
+		&(*verticies)[0],
+		&(*indicies)[0],
+		verticies->size(), indicies->size());
+}
+
+/// <summary>
+/// Adds to the vectors the details of the current's
+/// B_Member's children. Then applies this function 
+/// to each child 
+/// </summary>
+/// <param name="current"></param>
+/// <param name="verts"></param>
+/// <param name="inds"></param>
+void SkeletalHierarchy::RecurConstructIndicies(
+	std::shared_ptr<B_Member> current,
+	std::shared_ptr<std::vector<Vertex>> verts,
+	std::shared_ptr<std::vector<unsigned int>> inds)
+{
+	int index = verts->size() - 1;
+
+	for (auto& child : current->GetChildren())
+	{
+		verts->push_back(B_MemberToVertex(child));
+
+		// Line pair between parent and child 
+		inds->push_back(index);
+		inds->push_back(verts->size() - 1);
+
+		if (child->GetChildren().size() > 0)
+		{
+			RecurConstructIndicies(child, verts, inds);
+		}
+	}
 }
 
 /// <summary>
@@ -110,6 +182,25 @@ aiNode* SkeletalHierarchy::FindNode(aiBone* bone, aiNode** nodes, int nodeCount)
 	}
 
 	return nullptr;
+}
+
+/// <summary>
+/// Creates a vertex from a B_Member object. Used for constructing the 
+/// skeleton mesh for debug rendering 
+/// </summary>
+/// <param name="member"></param>
+/// <returns></returns>
+Vertex SkeletalHierarchy::B_MemberToVertex(std::shared_ptr<B_Member> member)
+{
+	Vertex vert = {};
+
+	aiVector3D sca;
+	aiVector3D rot;
+	aiVector3D pos;
+	member->GetNode()->mTransformation.Decompose(sca, rot, pos);
+
+	vert.Position = DirectX::XMFLOAT3(pos.x, pos.y, pos.z);
+	return vert;
 }
 
 #pragma endregion 
@@ -148,6 +239,16 @@ std::shared_ptr<B_Member> B_Member::GetParent()
 std::vector<std::shared_ptr<B_Member>> B_Member::GetChildren()
 {
 	return children;
+}
+
+aiBone* B_Member::GetBone()
+{
+	return bone;
+}
+
+aiNode* B_Member::GetNode()
+{
+	return bNode;
 }
 
 void B_Member::SetBone(aiBone* bone)

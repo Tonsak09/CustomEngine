@@ -164,7 +164,7 @@ void Scene::DrawDebugEntities(Microsoft::WRL::ComPtr<ID3D11DeviceContext> contex
 		DirectX::XMFLOAT3 ambient(0.1f, 0.1f, 0.25f);
 		debugEntities[i]->GetMat()->GetPixelShader()->SetFloat3("ambient", ambient);
 
-		entities[i]->Draw(context, cameras[currentCam]);
+		debugEntities[i]->Draw(context, cameras[currentCam]);
 	}
 }
 
