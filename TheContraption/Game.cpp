@@ -731,7 +731,7 @@ void Game::CreateGeometry()
 		&(*boneIndicies)[0],
 		boneVerticies->size(), boneIndicies->size(), false);*/
 
-	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(bonesMesh, schlickBronze)));
+	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);

@@ -117,7 +117,7 @@ void  SkeletalHierarchy::ConstructMesh(
 	// their child 
 	
 	
-	verticies->push_back(B_MemberToVertex(rootMember));
+	verticies->push_back(B_MemberToVertex(nullptr, rootMember));
 	RecurConstructIndicies(rootMember, verticies, indicies);
 
 	mesh = std::make_shared<Mesh>(device, context,
@@ -143,7 +143,7 @@ void SkeletalHierarchy::RecurConstructIndicies(
 
 	for (auto& child : current->GetChildren())
 	{
-		verts->push_back(B_MemberToVertex(child));
+		verts->push_back(B_MemberToVertex(current, child));
 
 		// Line pair between parent and child 
 		inds->push_back(index);
@@ -190,14 +190,26 @@ aiNode* SkeletalHierarchy::FindNode(aiBone* bone, aiNode** nodes, int nodeCount)
 /// </summary>
 /// <param name="member"></param>
 /// <returns></returns>
-Vertex SkeletalHierarchy::B_MemberToVertex(std::shared_ptr<B_Member> member)
+Vertex SkeletalHierarchy::B_MemberToVertex(std::shared_ptr<B_Member> parent, std::shared_ptr<B_Member> member)
 {
 	Vertex vert = {};
 
 	aiVector3D sca;
 	aiVector3D rot;
 	aiVector3D pos;
-	member->GetNode()->mTransformation.Decompose(sca, rot, pos);
+	aiMatrix4x4 mat;
+	
+	if (parent != nullptr)
+	{
+		mat = parent->GetBone()->mOffsetMatrix * member->GetBone()->mOffsetMatrix;
+	}
+	else
+	{
+		// Root does not have a parent 
+		mat = member->GetBone()->mOffsetMatrix;
+	}
+	
+	mat.Decompose(sca, rot, pos);
 
 	vert.Position = DirectX::XMFLOAT3(pos.x, pos.y, pos.z);
 	return vert;

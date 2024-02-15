@@ -79,7 +79,7 @@ private:
 
 	aiNode* FindNode(aiBone* bone, aiNode** nodes, int nodeCount);
 
-	Vertex B_MemberToVertex(std::shared_ptr<B_Member> member);
+	Vertex B_MemberToVertex(std::shared_ptr<B_Member> parent, std::shared_ptr<B_Member> member);
 
 	// Holds pointers to all bones 
 	std::unordered_map<std::string, std::shared_ptr<B_Member>> nameToBMember;
