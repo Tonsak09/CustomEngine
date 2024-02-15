@@ -199,16 +199,16 @@ Vertex SkeletalHierarchy::B_MemberToVertex(std::shared_ptr<B_Member> parent, std
 	aiVector3D pos;
 	aiMatrix4x4 mat;
 	
-	if (parent != nullptr)
-	{
-		mat = parent->GetBone()->mOffsetMatrix * member->GetBone()->mOffsetMatrix;
-	}
-	else
-	{
-		// Root does not have a parent 
-		mat = member->GetBone()->mOffsetMatrix;
-	}
-	
+	//if (parent != nullptr)
+	//{
+	//	mat = parent->GetBone()->mOffsetMatrix * member->GetBone()->mOffsetMatrix;
+	//}
+	//else
+	//{
+	//	// Root does not have a parent 
+	//	mat = member->GetBone()->mOffsetMatrix;
+	//}
+	mat = member->GetBone()->mOffsetMatrix;
 	mat.Decompose(sca, rot, pos);
 
 	vert.Position = DirectX::XMFLOAT3(pos.x, pos.y, pos.z);

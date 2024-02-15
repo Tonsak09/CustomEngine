@@ -731,7 +731,9 @@ void Game::CreateGeometry()
 		&(*boneIndicies)[0],
 		boneVerticies->size(), boneIndicies->size(), false);*/
 
-	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
+	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
