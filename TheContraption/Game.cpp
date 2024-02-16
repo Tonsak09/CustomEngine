@@ -624,6 +624,52 @@ void Game::CreateGeometry()
 
 	aiMatrix4x4 base = importScene->mRootNode->mTransformation; // TODO: Change to transform's matrix 
 
+	auto animation = importScene->mAnimations[0];
+	printf("This FBX has animations: %i", importScene->HasAnimations());
+	printf("\n");
+	printf("   ");
+	printf("Channels: %i", animation->mNumChannels);
+	printf("   ");
+	printf("Mesh Channels: %i", animation->mNumMeshChannels);
+	printf("   ");
+	printf("Morph Mesh Channels: %i", animation->mNumMorphMeshChannels);
+	printf("\n");
+
+	for (int m = 0; m < animation->mNumChannels; m++)
+	{
+		auto&& channels = animation->mChannels[m];
+		for (int i = 0; i < channels->mNumPositionKeys; i++)
+		{
+			aiVector3D pos = channels->mPositionKeys[i].mValue;
+
+			printf("   ");
+			printf("Position of node %s at time %f is (%f, %f, %f)",
+				channels->mNodeName.C_Str(),
+				channels->mPositionKeys[i].mTime,
+				pos.x, pos.y, pos.z);
+
+			printf("\n");
+		}
+
+		for (int i = 0; i < channels->mNumRotationKeys; i++)
+		{
+			aiQuaternion rot = channels->mRotationKeys[i].mValue;
+
+			printf("   ");
+			printf("Rotation of node %s at time %f is (%f, %f, %f, %f)",
+				channels->mNodeName.C_Str(),
+				channels->mRotationKeys[i].mTime,
+				rot.x, rot.y, rot.z, rot.w);
+
+			printf("\n");
+		}
+
+		printf("\n");
+	}
+	
+	
+	printf("\n");
+
 	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) 
@@ -698,8 +744,8 @@ void Game::CreateGeometry()
 				boneMatrix.Decompose(sca, rot, pos);
 
 				// Sphere for each bone position
-				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+				//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
 			}
 
 			if (skelyHierarchy != nullptr)
@@ -721,7 +767,7 @@ void Game::CreateGeometry()
 	recur(recur, importScene->mRootNode, base);
 
 
-	std::shared_ptr<Mesh> botMesh = std::make_shared<Mesh>(device, context,
+	std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
 		&(*skeleVerteicies)[0],
 		&(*skeleIndicies)[0],
 		vertexCounter, indexCounter);
@@ -731,9 +777,9 @@ void Game::CreateGeometry()
 		&(*boneIndicies)[0],
 		boneVerticies->size(), boneIndicies->size(), false);*/
 
-	skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
-	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
-	skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
+	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
 
 	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
