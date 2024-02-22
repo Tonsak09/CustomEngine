@@ -225,6 +225,10 @@ B_Member::B_Member(aiBone* bone, aiNode* bNode) :
 	bone(bone), bNode(bNode)
 {
 	children = std::vector<std::shared_ptr<B_Member>> ();
+
+	//DirectX::XMMATRIX(bNode->mTransformation.a1)
+	//loadTransform = std::make_shared<DirectX::XMMATRIX>();
+	//loadTransform
 };
 
 void B_Member::AddChild(std::shared_ptr<B_Member> member)

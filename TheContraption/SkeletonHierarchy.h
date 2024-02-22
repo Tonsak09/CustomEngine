@@ -47,6 +47,7 @@ private:
 	aiBone* bone;
 	aiNode* bNode;
 
+	std::shared_ptr<DirectX::XMMATRIX> loadTransform;
 };
 
 class SkeletalHierarchy

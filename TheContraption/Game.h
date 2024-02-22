@@ -42,6 +42,8 @@
 #include "BasicAnimation.h"
 #include "SkeletonHierarchy.h"
 
+#include "AnimClip.h"
+
 class Game 
 	: public DXCore
 {
@@ -65,6 +67,10 @@ private:
 	void CreateGeometry();
 	void CreateCameras();
 	void LoadShadowResources();
+
+	void ImportFBX();
+	void LoadFBXAnimations(const aiScene* scene);
+	std::shared_ptr<AnimClip> idleClip;
 
 	/// <summary>
 	/// Helper for creating light view matricies for a light
@@ -144,6 +150,7 @@ private:
 	std::unordered_map<std::shared_ptr<Material>, std::shared_ptr<MatData>> matToResources;
 
 	// Light gizmo itmes 
+	std::shared_ptr<Mesh> lightGUIModel;
 	std::vector<std::shared_ptr<Entity>> lightGizmos;
 	std::unordered_map<Light*, Entity*> lightToGizmos;
 	
@@ -220,7 +227,9 @@ private:
 	std::shared_ptr<std::vector<Vertex>> boneVerticies;
 	std::shared_ptr<std::vector<unsigned int>> boneIndicies;
 
+	//const aiScene* importScene;
 	std::shared_ptr<SkeletalHierarchy> skelyHierarchy;
+	std::shared_ptr<AnimClip> importAnimClip;
 
 	#pragma endregion
 

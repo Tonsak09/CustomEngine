@@ -106,6 +106,7 @@ void Game::Init()
 	LoadShaders();
 	LoadShadowResources();
 	CreateGeometry();
+	ImportFBX();
 	CreateCameras();
 	
 	// Set initial graphics API state
@@ -375,7 +376,7 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/cube.obj").c_str());
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/torus.obj").c_str());
 	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/quad_double_sided.obj").c_str());
-	std::shared_ptr<Mesh> lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
+	lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
 	
 
 	// Setup mec eye 
@@ -585,206 +586,7 @@ void Game::CreateGeometry()
 
 	#pragma region SKELE_SCENE_ENTITIES
 
-	// Set the import flags
-	unsigned int flags = 
-		aiProcessPreset_TargetRealtime_MaxQuality | 
-		aiProcess_Triangulate | 
-		aiProcess_PopulateArmatureData;
-		
-		/*aiProcess_Triangulate |
-		aiProcess_GenSmoothNormals |
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_SortByPType |
-		aiProcess_LimitBoneWeights |
-		aiProcess_ImproveCacheLocality |
-		aiProcess_RemoveRedundantMaterials |
-		aiProcess_FindDegenerates |
-		aiProcess_FindInvalidData |
-		aiProcess_OptimizeMeshes |
-		aiProcess_OptimizeGraph |
-		aiProcess_FlipUVs;*/
-
-	// Add flags for importing skeletons and animations
-	flags |= aiProcessPreset_TargetRealtime_MaxQuality;
-
-	Assimp::Importer imp; // File path begins at solution 
-	auto importScene = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
-	int indexCounter = 0;
-	
-	// Reset transformations 
-	//yBot->mRootNode->mTransformation = aiMatrix4x4();
-
-
-	// Skelly scene entities 
-	std::vector<std::shared_ptr<Entity>> skelyEnts		= std::vector<std::shared_ptr<Entity>>();
-	std::vector<std::shared_ptr<Entity>> skelyDebugEnts = std::vector<std::shared_ptr<Entity>>();
-
-	// Add all entites to the primary vector 
-	
-
-	aiMatrix4x4 base = importScene->mRootNode->mTransformation; // TODO: Change to transform's matrix 
-
-	auto animation = importScene->mAnimations[0];
-	printf("This FBX has animations: %i", importScene->HasAnimations());
-	printf("\n");
-	printf("   ");
-	printf("Channels: %i", animation->mNumChannels);
-	printf("   ");
-	printf("Mesh Channels: %i", animation->mNumMeshChannels);
-	printf("   ");
-	printf("Morph Mesh Channels: %i", animation->mNumMorphMeshChannels);
-	printf("\n");
-
-	for (int m = 0; m < animation->mNumChannels; m++)
-	{
-		auto&& channels = animation->mChannels[m];
-		for (int i = 0; i < channels->mNumPositionKeys; i++)
-		{
-			aiVector3D pos = channels->mPositionKeys[i].mValue;
-
-			printf("   ");
-			printf("Position of node %s at time %f is (%f, %f, %f)",
-				channels->mNodeName.C_Str(),
-				channels->mPositionKeys[i].mTime,
-				pos.x, pos.y, pos.z);
-
-			printf("\n");
-		}
-
-		for (int i = 0; i < channels->mNumRotationKeys; i++)
-		{
-			aiQuaternion rot = channels->mRotationKeys[i].mValue;
-
-			printf("   ");
-			printf("Rotation of node %s at time %f is (%f, %f, %f, %f)",
-				channels->mNodeName.C_Str(),
-				channels->mRotationKeys[i].mTime,
-				rot.x, rot.y, rot.z, rot.w);
-
-			printf("\n");
-		}
-
-		printf("\n");
-	}
-	
-	
-	printf("\n");
-
-	unsigned int vertexCounter = 0;
-	// Recursivlley travels the bones
-	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix) 
-	{
-		//printf(node->mName.C_Str());
-		//printf(":	");
-		//printf("%i", node->mNumMeshes);
-		//printf("\n");
-		
-		// Iterate through a node's meshes and then set all the bones 
-		for (int m = 0; m < node->mNumMeshes; m++)
-		{
-			auto mesh = importScene->mMeshes[node->mMeshes[m]];
-
-			// Set up each vertex 
-			vertexCounter = 0;
-			do
-			{
-				Vertex vert;
-				vert.Position = DirectX::XMFLOAT3(
-					mesh->mVertices[vertexCounter].x,
-					mesh->mVertices[vertexCounter].y,
-					mesh->mVertices[vertexCounter].z
-				);
-				vert.Normal = DirectX::XMFLOAT3(
-					mesh->mNormals[vertexCounter].x,
-					mesh->mNormals[vertexCounter].y,
-					mesh->mNormals[vertexCounter].z
-				);
-				vert.Tangent = DirectX::XMFLOAT3(
-					mesh->mTangents[vertexCounter].x,
-					mesh->mTangents[vertexCounter].y,
-					mesh->mTangents[vertexCounter].z
-				);
-				vert.UV = DirectX::XMFLOAT2(
-					(float)mesh->mTextureCoords[0][vertexCounter].x,
-					(float)mesh->mTextureCoords[0][vertexCounter].y
-				);
-
-
-				skeleVerteicies->push_back(vert);
-
-				vertexCounter++;
-			} while (vertexCounter < mesh->mNumVertices);
-			printf("\n");
-
-			// Indicies 
-			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-			{
-				aiFace face = mesh->mFaces[f];
-
-				indexCounter += mesh->mFaces[f].mNumIndices;
-				for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
-				{
-					skeleIndicies->push_back(face.mIndices[i]);
-				}
-			}
-
-
-			// Bones
-			if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
-				skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
-			
-			for (unsigned int i = 0; i < mesh->mNumBones; i++)
-			{
-				auto bone = mesh->mBones[i];
-				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
-
-				aiVector3D sca;
-				aiVector3D rot;
-				aiVector3D pos;
-				boneMatrix.Decompose(sca, rot, pos);
-
-				// Sphere for each bone position
-				//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-			}
-
-			if (skelyHierarchy != nullptr)
-			{
-				skelyHierarchy->ConstructMesh(device, context);
-				skelyDebugEnts.push_back(std::make_shared<Entity>(skelyHierarchy->GetMesh(), schlickBricks));
-			}
-			
-		}
-		if (node->mNumChildren == 0)
-			return;
-
-		for (unsigned int i = 0; i < node->mNumChildren; i++)
-		{
-			recur(recur, node->mChildren[i], parentMatrix);
-		}
-	}; // end of lambda expression
-
-	recur(recur, importScene->mRootNode, base);
-
-
-	std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
-		&(*skeleVerteicies)[0],
-		&(*skeleIndicies)[0],
-		vertexCounter, indexCounter);
-	
-	/*std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
-		&(*boneVerticies)[0],
-		&(*boneIndicies)[0],
-		boneVerticies->size(), boneIndicies->size(), false);*/
-
-	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
-	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
-	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
-
-	// Put all into scene(s)
-	skeleScene->SetEntities(skelyEnts);
-	skeleScene->SetDebugEntities(skelyDebugEnts);
-	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+	ImportFBX();
 
 	#pragma endregion
 }
@@ -894,6 +696,230 @@ void Game::LoadShadowResources()
 	shadowSampDesc.BorderColor[0] = 1.0f; // Only need the first component
 	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 }
+
+void Game::ImportFBX()
+{
+	// Set the import flags
+	unsigned int flags =
+		aiProcessPreset_TargetRealtime_MaxQuality |
+		aiProcess_Triangulate |
+		aiProcess_PopulateArmatureData;
+
+	// Add flags for importing skeletons and animations
+	flags |= aiProcessPreset_TargetRealtime_MaxQuality;
+
+	Assimp::Importer imp; // File path begins at solution 
+	auto importScene = imp.ReadFile("Assets/Models/HN_GrimmChild_Anim_12framesfinal.fbx", flags);
+	int indexCounter = 0;
+
+	// Reset transformations 
+	//yBot->mRootNode->mTransformation = aiMatrix4x4();
+
+
+	// Skelly scene entities 
+	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
+	std::vector<std::shared_ptr<Entity>> skelyDebugEnts = std::vector<std::shared_ptr<Entity>>();
+
+	// Add all entites to the primary vector 
+
+
+	aiMatrix4x4 base = importScene->mRootNode->mTransformation; // TODO: Change to transform's matrix 
+
+
+
+
+	printf("\n");
+
+	unsigned int vertexCounter = 0;
+	// Recursivlley travels the bones
+	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix)
+		{
+			//printf(node->mName.C_Str());
+			//printf(":	");
+			//printf("%i", node->mNumMeshes);
+			//printf("\n");
+
+			// Iterate through a node's meshes and then set all the bones 
+			for (int m = 0; m < node->mNumMeshes; m++)
+			{
+				auto mesh = importScene->mMeshes[node->mMeshes[m]];
+
+				// Set up each vertex 
+				vertexCounter = 0;
+				do
+				{
+					Vertex vert;
+					vert.Position = DirectX::XMFLOAT3(
+						mesh->mVertices[vertexCounter].x,
+						mesh->mVertices[vertexCounter].y,
+						mesh->mVertices[vertexCounter].z
+					);
+					vert.Normal = DirectX::XMFLOAT3(
+						mesh->mNormals[vertexCounter].x,
+						mesh->mNormals[vertexCounter].y,
+						mesh->mNormals[vertexCounter].z
+					);
+					vert.Tangent = DirectX::XMFLOAT3(
+						mesh->mTangents[vertexCounter].x,
+						mesh->mTangents[vertexCounter].y,
+						mesh->mTangents[vertexCounter].z
+					);
+					vert.UV = DirectX::XMFLOAT2(
+						(float)mesh->mTextureCoords[0][vertexCounter].x,
+						(float)mesh->mTextureCoords[0][vertexCounter].y
+					);
+
+
+					skeleVerteicies->push_back(vert);
+
+					vertexCounter++;
+				} while (vertexCounter < mesh->mNumVertices);
+				printf("\n");
+
+				// Indicies 
+				for (unsigned int f = 0; f < mesh->mNumFaces; f++)
+				{
+					aiFace face = mesh->mFaces[f];
+
+					indexCounter += mesh->mFaces[f].mNumIndices;
+					for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
+					{
+						skeleIndicies->push_back(face.mIndices[i]);
+					}
+				}
+
+
+				// Bones
+				if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
+					skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
+
+				for (unsigned int i = 0; i < mesh->mNumBones; i++)
+				{
+					auto bone = mesh->mBones[i];
+					aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
+
+					aiVector3D sca;
+					aiVector3D rot;
+					aiVector3D pos;
+					boneMatrix.Decompose(sca, rot, pos);
+
+					// Sphere for each bone position
+					//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+					//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+				}
+
+				if (skelyHierarchy != nullptr)
+				{
+					skelyHierarchy->ConstructMesh(device, context);
+					skelyDebugEnts.push_back(std::make_shared<Entity>(skelyHierarchy->GetMesh(), schlickBricks));
+				}
+
+			}
+			if (node->mNumChildren == 0)
+				return;
+
+			for (unsigned int i = 0; i < node->mNumChildren; i++)
+			{
+				recur(recur, node->mChildren[i], parentMatrix);
+			}
+		}; // end of lambda expression
+
+	recur(recur, importScene->mRootNode, base);
+
+
+	std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
+		&(*skeleVerteicies)[0],
+		&(*skeleIndicies)[0],
+		vertexCounter, indexCounter);
+
+	/*std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
+		&(*boneVerticies)[0],
+		&(*boneIndicies)[0],
+		boneVerticies->size(), boneIndicies->size(), false);*/
+
+		//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
+		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
+
+		// Put all into scene(s)
+	skeleScene->SetEntities(skelyEnts);
+	skeleScene->SetDebugEntities(skelyDebugEnts);
+	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
+
+	LoadFBXAnimations(importScene);
+}
+
+void Game::LoadFBXAnimations(const aiScene* scene)
+{
+	auto animation = scene->mAnimations[0];
+	printf("This FBX has animations: %i", scene->HasAnimations());
+	printf("\n");
+	printf("   ");
+	printf("Channels: %i", animation->mNumChannels);
+	printf("   ");
+	printf("Mesh Channels: %i", animation->mNumMeshChannels);
+	printf("   ");
+	printf("Morph Mesh Channels: %i", animation->mNumMorphMeshChannels);
+	printf("\n");
+
+	std::vector<float> positionTimes;
+	std::vector<DirectX::XMFLOAT3> positions;
+	std::vector<float> rotationTimes;
+	std::vector<DirectX::XMFLOAT3> rotations;
+
+	// Print out all animation data 
+	for (int m = 0; m < animation->mNumChannels; m++)
+	{
+		/*
+			std::string name,
+			std::vector<float> positionKeyTimes,
+			std::vector<DirectX::XMFLOAT3> positions,
+			std::vector<float> rotationKeyTimes,
+			std::vector<DirectX::XMFLOAT3> rotations);
+		*/
+		std::vector<float> posKeyTimes;
+		std::vector<DirectX::XMFLOAT3> positions;
+		std::vector<float>rotKeyTimes;
+		std::vector<DirectX::XMFLOAT4> rotations;
+
+		auto&& channels = animation->mChannels[m];
+		for (int i = 0; i < channels->mNumPositionKeys; i++)
+		{
+			aiVector3D pos = channels->mPositionKeys[i].mValue;
+
+			posKeyTimes.push_back(channels->mPositionKeys[i].mTime);
+			positions.push_back(XMFLOAT3(pos.x, pos.y, pos.z));
+
+			printf("   ");
+			printf("Position of node %s at time %f is (%f, %f, %f)",
+				channels->mNodeName.C_Str(),
+				channels->mPositionKeys[i].mTime,
+				pos.x, pos.y, pos.z);
+
+			printf("\n");
+		}
+
+		for (int i = 0; i < channels->mNumRotationKeys; i++)
+		{
+			aiQuaternion rot = channels->mRotationKeys[i].mValue;
+
+			rotKeyTimes.push_back(channels->mRotationKeys[i].mTime);
+			rotations.push_back(XMFLOAT4(rot.x, rot.y, rot.z, rot.w));
+
+			printf("   ");
+			printf("Rotation of node %s at time %f is (%f, %f, %f, %f)",
+				channels->mNodeName.C_Str(),
+				channels->mRotationKeys[i].mTime,
+				rot.x, rot.y, rot.z, rot.w);
+
+			printf("\n");
+		}
+
+		printf("\n");
+	}
+}
+
+
 
 void Game::AnimSceneLogic(float deltaTime)
 {

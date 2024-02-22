@@ -12,6 +12,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{acfc80f5-04ae-4b87-a7f6-6b4ba0af6a98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\SkeletalAnimation">
+      <UniqueIdentifier>{5aa92b9a-845b-4819-a1ab-82b295413fa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SkeletalAnimation">
+      <UniqueIdentifier>{8ae6803a-c75c-4515-890e-fa4d861e368d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DXCore.cpp">
@@ -166,8 +172,20 @@
     <ClInclude Include="ShadowShaderData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Animator.h">
+      <Filter>Header Files\SkeletalAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimClip.h">
+      <Filter>Header Files\SkeletalAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimMoment.h">
+      <Filter>Header Files\SkeletalAnimation</Filter>
+    </ClInclude>
     <ClInclude Include="SkeletonHierarchy.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\SkeletalAnimation</Filter>
+    </ClInclude>
+    <ClInclude Include="Timeline.h">
+      <Filter>Header Files\SkeletalAnimation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
