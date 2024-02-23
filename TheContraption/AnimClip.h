@@ -30,7 +30,7 @@ public:
 		std::vector<float> positionKeyTimes,
 		std::vector<DirectX::XMFLOAT3> positions,
 		std::vector<float> rotationKeyTimes,
-		std::vector<DirectX::XMFLOAT3> rotations);
+		std::vector<DirectX::XMFLOAT4> rotations);
 
 	std::string GetName();
 	std::shared_ptr<AnimMoment> GetMoment(float time);
@@ -49,7 +49,7 @@ private:
 class AnimClip
 {
 public:
-	AnimClip(std::vector<std::shared_ptr<BoneClip>>);
+	AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond);
 
 	void AddBone(std::shared_ptr<BoneClip> boneClip);
 	std::vector<std::shared_ptr<AnimMoment>> GetMoments(float time);
@@ -74,5 +74,8 @@ private:
 
 	std::vector<std::shared_ptr<BoneClip>> boneClips;
 	std::unordered_map<std::string, std::shared_ptr<BoneClip>> nameToBoneClip;
+
+	float duration; // duration in ticks 
+	float ticksPerSecond;
 	
 };

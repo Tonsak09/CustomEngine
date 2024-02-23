@@ -90,7 +90,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SkeletalHierarchy.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\SkeletalAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimClip.cpp">
+      <Filter>Source Files\SkeletalAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimMoment.cpp">
+      <Filter>Source Files\SkeletalAnimation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

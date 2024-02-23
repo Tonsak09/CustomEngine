@@ -147,6 +147,8 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AnimClip.cpp" />
+    <ClCompile Include="AnimMoment.cpp" />
     <ClCompile Include="BasicAnimation.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DXCore.cpp" />

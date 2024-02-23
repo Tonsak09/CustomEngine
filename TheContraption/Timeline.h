@@ -14,7 +14,7 @@
 struct Timeline
 {
 public:
-	Timeline(float timelineLength, bool loops = true);
+	Timeline(float duration, bool loops = true);
 
 	void UpdateTimeline(float delta);
 

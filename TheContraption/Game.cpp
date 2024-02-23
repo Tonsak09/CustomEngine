@@ -586,7 +586,7 @@ void Game::CreateGeometry()
 
 	#pragma region SKELE_SCENE_ENTITIES
 
-	ImportFBX();
+	/*ImportFBX();*/ // Done in init 
 
 	#pragma endregion
 }
@@ -720,12 +720,7 @@ void Game::ImportFBX()
 	std::vector<std::shared_ptr<Entity>> skelyEnts = std::vector<std::shared_ptr<Entity>>();
 	std::vector<std::shared_ptr<Entity>> skelyDebugEnts = std::vector<std::shared_ptr<Entity>>();
 
-	// Add all entites to the primary vector 
-
-
 	aiMatrix4x4 base = importScene->mRootNode->mTransformation; // TODO: Change to transform's matrix 
-
-
 
 
 	printf("\n");
@@ -733,96 +728,91 @@ void Game::ImportFBX()
 	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix)
+	{
+		// Iterate through a node's meshes and then set all the bones 
+		for (int m = 0; m < node->mNumMeshes; m++)
 		{
-			//printf(node->mName.C_Str());
-			//printf(":	");
-			//printf("%i", node->mNumMeshes);
-			//printf("\n");
+			auto mesh = importScene->mMeshes[node->mMeshes[m]];
 
-			// Iterate through a node's meshes and then set all the bones 
-			for (int m = 0; m < node->mNumMeshes; m++)
+			// Set up each vertex 
+			vertexCounter = 0;
+			do
 			{
-				auto mesh = importScene->mMeshes[node->mMeshes[m]];
-
-				// Set up each vertex 
-				vertexCounter = 0;
-				do
-				{
-					Vertex vert;
-					vert.Position = DirectX::XMFLOAT3(
-						mesh->mVertices[vertexCounter].x,
-						mesh->mVertices[vertexCounter].y,
-						mesh->mVertices[vertexCounter].z
-					);
-					vert.Normal = DirectX::XMFLOAT3(
-						mesh->mNormals[vertexCounter].x,
-						mesh->mNormals[vertexCounter].y,
-						mesh->mNormals[vertexCounter].z
-					);
-					vert.Tangent = DirectX::XMFLOAT3(
-						mesh->mTangents[vertexCounter].x,
-						mesh->mTangents[vertexCounter].y,
-						mesh->mTangents[vertexCounter].z
-					);
-					vert.UV = DirectX::XMFLOAT2(
-						(float)mesh->mTextureCoords[0][vertexCounter].x,
-						(float)mesh->mTextureCoords[0][vertexCounter].y
-					);
+				Vertex vert;
+				vert.Position = DirectX::XMFLOAT3(
+					mesh->mVertices[vertexCounter].x,
+					mesh->mVertices[vertexCounter].y,
+					mesh->mVertices[vertexCounter].z
+				);
+				vert.Normal = DirectX::XMFLOAT3(
+					mesh->mNormals[vertexCounter].x,
+					mesh->mNormals[vertexCounter].y,
+					mesh->mNormals[vertexCounter].z
+				);
+				vert.Tangent = DirectX::XMFLOAT3(
+					mesh->mTangents[vertexCounter].x,
+					mesh->mTangents[vertexCounter].y,
+					mesh->mTangents[vertexCounter].z
+				);
+				vert.UV = DirectX::XMFLOAT2(
+					(float)mesh->mTextureCoords[0][vertexCounter].x,
+					(float)mesh->mTextureCoords[0][vertexCounter].y
+				);
 
 
-					skeleVerteicies->push_back(vert);
+				skeleVerteicies->push_back(vert);
 
-					vertexCounter++;
-				} while (vertexCounter < mesh->mNumVertices);
-				printf("\n");
+				vertexCounter++;
+			} while (vertexCounter < mesh->mNumVertices);
+			printf("\n");
 
-				// Indicies 
-				for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-				{
-					aiFace face = mesh->mFaces[f];
-
-					indexCounter += mesh->mFaces[f].mNumIndices;
-					for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
-					{
-						skeleIndicies->push_back(face.mIndices[i]);
-					}
-				}
-
-
-				// Bones
-				if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
-					skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
-
-				for (unsigned int i = 0; i < mesh->mNumBones; i++)
-				{
-					auto bone = mesh->mBones[i];
-					aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
-
-					aiVector3D sca;
-					aiVector3D rot;
-					aiVector3D pos;
-					boneMatrix.Decompose(sca, rot, pos);
-
-					// Sphere for each bone position
-					//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-					//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-				}
-
-				if (skelyHierarchy != nullptr)
-				{
-					skelyHierarchy->ConstructMesh(device, context);
-					skelyDebugEnts.push_back(std::make_shared<Entity>(skelyHierarchy->GetMesh(), schlickBricks));
-				}
-
-			}
-			if (node->mNumChildren == 0)
-				return;
-
-			for (unsigned int i = 0; i < node->mNumChildren; i++)
+			// Indicies 
+			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
 			{
-				recur(recur, node->mChildren[i], parentMatrix);
+				aiFace face = mesh->mFaces[f];
+
+				indexCounter += mesh->mFaces[f].mNumIndices;
+				for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
+				{
+					skeleIndicies->push_back(face.mIndices[i]);
+				}
 			}
-		}; // end of lambda expression
+
+
+			// Bones
+			if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
+				skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
+
+			for (unsigned int i = 0; i < mesh->mNumBones; i++)
+			{
+				auto bone = mesh->mBones[i];
+				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
+
+				aiVector3D sca;
+				aiVector3D rot;
+				aiVector3D pos;
+				boneMatrix.Decompose(sca, rot, pos);
+
+				// Sphere for each bone position
+				//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
+				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+			}
+
+			if (skelyHierarchy != nullptr)
+			{
+				skelyHierarchy->ConstructMesh(device, context);
+				skelyDebugEnts.push_back(std::make_shared<Entity>(skelyHierarchy->GetMesh(), schlickBricks));
+			}
+
+		}
+		if (node->mNumChildren == 0)
+			return;
+
+		for (unsigned int i = 0; i < node->mNumChildren; i++)
+		{
+			recur(recur, node->mChildren[i], parentMatrix);
+		}
+	}; // end of lambda expression
 
 	recur(recur, importScene->mRootNode, base);
 
@@ -833,15 +823,15 @@ void Game::ImportFBX()
 		vertexCounter, indexCounter);
 
 	/*std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
-		&(*boneVerticies)[0],
-		&(*boneIndicies)[0],
-		boneVerticies->size(), boneIndicies->size(), false);*/
+	&(*boneVerticies)[0],
+	&(*boneIndicies)[0],
+	boneVerticies->size(), boneIndicies->size(), false);*/
 
-		//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
-		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
-		//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
+	//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(botMesh, schlickBronze)));
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetScale(100);
+	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
 
-		// Put all into scene(s)
+	// Put all into scene(s)
 	skeleScene->SetEntities(skelyEnts);
 	skeleScene->SetDebugEntities(skelyDebugEnts);
 	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
@@ -867,6 +857,8 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 	std::vector<float> rotationTimes;
 	std::vector<DirectX::XMFLOAT3> rotations;
 
+	std::vector<std::shared_ptr<BoneClip>> boneClips;
+
 	// Print out all animation data 
 	for (int m = 0; m < animation->mNumChannels; m++)
 	{
@@ -883,6 +875,8 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 		std::vector<DirectX::XMFLOAT4> rotations;
 
 		auto&& channels = animation->mChannels[m];
+
+		// Positions 
 		for (int i = 0; i < channels->mNumPositionKeys; i++)
 		{
 			aiVector3D pos = channels->mPositionKeys[i].mValue;
@@ -899,6 +893,7 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 			printf("\n");
 		}
 
+		// Rotations 
 		for (int i = 0; i < channels->mNumRotationKeys; i++)
 		{
 			aiQuaternion rot = channels->mRotationKeys[i].mValue;
@@ -915,8 +910,14 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 			printf("\n");
 		}
 
+		std::shared_ptr<BoneClip> boneClip = std::make_shared<BoneClip>(channels->mNodeName.C_Str(), posKeyTimes, positions, rotKeyTimes, rotations);
+		boneClips.push_back(boneClip);
+
 		printf("\n");
 	}
+
+	idleClip = std::make_shared<AnimClip>(boneClips, animation->mDuration, animation->mTicksPerSecond);
+	auto moments = idleClip->GetMoments(0.0f);
 }
 
 
