@@ -147,6 +147,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animator.cpp" />
     <ClCompile Include="AnimClip.cpp" />
     <ClCompile Include="AnimMoment.cpp" />
     <ClCompile Include="BasicAnimation.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="SkeletalHierarchy.cpp" />
     <ClCompile Include="Sky.cpp" />
+    <ClCompile Include="Timeline.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>

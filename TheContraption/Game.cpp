@@ -884,11 +884,11 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 			posKeyTimes.push_back(channels->mPositionKeys[i].mTime);
 			positions.push_back(XMFLOAT3(pos.x, pos.y, pos.z));
 
-			printf("   ");
+			/*printf("   ");
 			printf("Position of node %s at time %f is (%f, %f, %f)",
 				channels->mNodeName.C_Str(),
 				channels->mPositionKeys[i].mTime,
-				pos.x, pos.y, pos.z);
+				pos.x, pos.y, pos.z);*/
 
 			printf("\n");
 		}
@@ -901,11 +901,11 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 			rotKeyTimes.push_back(channels->mRotationKeys[i].mTime);
 			rotations.push_back(XMFLOAT4(rot.x, rot.y, rot.z, rot.w));
 
-			printf("   ");
+			/*printf("   ");
 			printf("Rotation of node %s at time %f is (%f, %f, %f, %f)",
 				channels->mNodeName.C_Str(),
 				channels->mRotationKeys[i].mTime,
-				rot.x, rot.y, rot.z, rot.w);
+				rot.x, rot.y, rot.z, rot.w);*/
 
 			printf("\n");
 		}
@@ -917,7 +917,9 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 	}
 
 	idleClip = std::make_shared<AnimClip>(boneClips, animation->mDuration, animation->mTicksPerSecond);
-	auto moments = idleClip->GetMoments(0.0f);
+	auto moments = idleClip->GetMoments(-1.0f);
+
+	Animator animator(skelyHierarchy, idleClip);
 }
 
 

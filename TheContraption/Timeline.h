@@ -14,18 +14,22 @@
 struct Timeline
 {
 public:
+	Timeline();
 	Timeline(float duration, bool loops = true);
 
 	void UpdateTimeline(float delta);
 
 	void SetTime(float time);
 	void SetLoops(bool loops);
+	void SetDuration(float time);
 
 	float GetTime();
 	float GetUnitInterval();
 	bool GetLoops();
 
 private:
-	float length;
+	float currentTime;
+
+	float duration;
 	bool loops;
 };

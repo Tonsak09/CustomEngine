@@ -41,6 +41,7 @@
 
 #include "BasicAnimation.h"
 #include "SkeletonHierarchy.h"
+#include "Animator.h"
 
 #include "AnimClip.h"
 

@@ -28,4 +28,6 @@ public:
 private:
 	std::shared_ptr<SkeletalHierarchy> skeleton;
 	std::shared_ptr<AnimClip> currentClip;
+
+	std::shared_ptr<Timeline> timeLine;
 };

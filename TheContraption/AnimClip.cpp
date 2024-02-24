@@ -3,8 +3,8 @@
 #include "AnimClip.h"
 
 
-AnimClip::AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond) :
-	boneClips(boneClips), duration(duration), ticksPerSecond(ticksPerSecond)
+AnimClip::AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond, bool loops) :
+	boneClips(boneClips), duration(duration), ticksPerSecond(ticksPerSecond), loops(loops)
 {
 	// Setup unorder list for later use 
 	for (auto clip : boneClips)
@@ -13,6 +13,12 @@ AnimClip::AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float durat
 	}
 }
 
+/// <summary>
+/// Retrieve the specific transforms of each bone in between, or on,
+/// frames along with the bone's name. 
+/// </summary>
+/// <param name="time"></param>
+/// <returns></returns>
 std::vector<std::shared_ptr<AnimMoment>> AnimClip::GetMoments(float time)
 {
 	std::vector<std::shared_ptr<AnimMoment>> moments;
@@ -23,6 +29,35 @@ std::vector<std::shared_ptr<AnimMoment>> AnimClip::GetMoments(float time)
 	}
 
 	return moments;
+}
+
+/// <summary>
+/// Add another bone to the clip to be animated 
+/// </summary>
+/// <param name="time"></param>
+/// <returns></returns>
+void AnimClip::AddBone(std::shared_ptr<BoneClip> boneClip)
+{
+	boneClips.push_back(boneClip);
+	nameToBoneClip[boneClip->GetName()] = boneClip;
+}
+
+/// <summary>
+/// Get the length of time in ticks that this clip lasts 
+/// </summary>
+/// <returns></returns>
+float AnimClip::GetDuration()
+{
+	return duration;
+}
+
+/// <summary>
+/// Whether or not this animation loops 
+/// </summary>
+/// <returns></returns>
+bool AnimClip::GetLoops()
+{
+	return loops;
 }
 
 

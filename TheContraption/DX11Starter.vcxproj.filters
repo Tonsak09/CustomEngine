@@ -98,6 +98,12 @@
     <ClCompile Include="AnimMoment.cpp">
       <Filter>Source Files\SkeletalAnimation</Filter>
     </ClCompile>
+    <ClCompile Include="Animator.cpp">
+      <Filter>Source Files\SkeletalAnimation</Filter>
+    </ClCompile>
+    <ClCompile Include="Timeline.cpp">
+      <Filter>Source Files\SkeletalAnimation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">

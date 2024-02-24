@@ -49,10 +49,13 @@ private:
 class AnimClip
 {
 public:
-	AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond);
+	AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond, bool loops = true);
 
 	void AddBone(std::shared_ptr<BoneClip> boneClip);
 	std::vector<std::shared_ptr<AnimMoment>> GetMoments(float time);
+
+	float GetDuration();
+	bool GetLoops();
 
 private:
 
@@ -77,5 +80,5 @@ private:
 
 	float duration; // duration in ticks 
 	float ticksPerSecond;
-	
+	bool loops;
 };
