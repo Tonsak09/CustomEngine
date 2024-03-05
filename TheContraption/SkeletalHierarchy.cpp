@@ -68,6 +68,17 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 	rootMember->RecurPrint(0);
 }
 
+/// <summary>
+/// Set the transform of a member
+/// </summary>
+/// <param name="memberName"></param>
+/// <param name="position"></param>
+/// <param name="rotation"></param>
+void SkeletalHierarchy::UpdateMember(std::string memberName, XMFLOAT3 position, XMFLOAT4 rotation)
+{
+	//nameToBMember[memberName]->SetPosition(position);
+	//nameToBMember[memberName]->SetRotationEuler(rotation);
+}
 
 /// <summary>
 /// Iterates through some starting point in the tree in order to 
@@ -76,7 +87,7 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 std::shared_ptr<B_Member> SkeletalHierarchy::GetRoot(std::shared_ptr<B_Member> startPoint)
 {
 	std::shared_ptr<B_Member> current = startPoint;
-
+	
 	while (current->GetParent() != nullptr)
 	{
 		current = current->GetParent();
@@ -227,8 +238,23 @@ B_Member::B_Member(aiBone* bone, aiNode* bNode) :
 	children = std::vector<std::shared_ptr<B_Member>> ();
 
 	//DirectX::XMMATRIX(bNode->mTransformation.a1)
-	//loadTransform = std::make_shared<DirectX::XMMATRIX>();
-	//loadTransform
+	loadTransform = std::make_shared<DirectX::XMMATRIX>();
+	
+
+	if (bNode == nullptr)
+		return;
+
+	transform = std::make_shared<Transform>();
+	//transform->SetPosition(bNode->mTransformation.Decompose)
+
+	aiVector3D sca;
+	aiVector3D rot;
+	aiVector3D pos;
+	bNode->mTransformation.Decompose(sca, rot, pos);
+
+	transform->SetPosition(XMFLOAT3(pos.x, pos.y, pos.z));
+	transform->SetEulerRotation(XMFLOAT3(rot.x, rot.y, rot.z));
+
 };
 
 void B_Member::AddChild(std::shared_ptr<B_Member> member)
@@ -275,6 +301,30 @@ void B_Member::SetBone(aiBone* bone)
 void B_Member::SetBNode(aiNode* bNode)
 {
 	this->bNode = bNode;
+
+	if (bNode == nullptr)
+		return;
+
+	transform = std::make_shared<Transform>();
+	//transform->SetPosition(bNode->mTransformation.Decompose)
+
+	aiVector3D sca;
+	aiVector3D rot;
+	aiVector3D pos;
+	bNode->mTransformation.Decompose(sca, rot, pos);
+
+	transform->SetPosition(XMFLOAT3(pos.x, pos.y, pos.z));
+	transform->SetEulerRotation(XMFLOAT3(rot.x, rot.y, rot.z));
+}
+
+void B_Member::SetPosition(XMFLOAT3 position)
+{
+	transform->SetPosition(position);
+}
+
+void B_Member::SetRotationEuler(XMFLOAT3 rotation)
+{
+	transform->SetEulerRotation(rotation);
 }
 
 void B_Member::RecurPrint(int layer)

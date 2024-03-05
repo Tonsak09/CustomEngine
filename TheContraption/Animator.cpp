@@ -21,6 +21,16 @@ Animator::Animator(std::shared_ptr<SkeletalHierarchy> hierarchy, std::shared_ptr
 /// <param name="delta"></param>
 void Animator::AnimateSkeleton(float delta)
 {
+	timeLine->UpdateTimeline(delta);
+	printf("%f \n", timeLine->GetTime());
+
+	std::vector<std::shared_ptr<AnimMoment>> currentMoments = currentClip->GetMoments(timeLine->GetTime());
+
+	// Iterate and update each bone vertex 
+	for (std::shared_ptr<AnimMoment> moment : currentMoments)
+	{
+		skeleton->UpdateMember(moment->GetName(), moment->GetPosition(), moment->GetRotation());
+	}
 
 }
 

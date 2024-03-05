@@ -792,7 +792,7 @@ void Game::ImportFBX()
 				aiVector3D rot;
 				aiVector3D pos;
 				boneMatrix.Decompose(sca, rot, pos);
-
+				
 				// Sphere for each bone position
 				//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
 				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
@@ -919,7 +919,7 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 	idleClip = std::make_shared<AnimClip>(boneClips, animation->mDuration, animation->mTicksPerSecond);
 	auto moments = idleClip->GetMoments(-1.0f);
 
-	Animator animator(skelyHierarchy, idleClip);
+	skeleAnimator = std::make_shared<Animator>(skelyHierarchy, idleClip);
 }
 
 
@@ -984,6 +984,11 @@ void Game::AnimSceneLogic(float deltaTime)
 		isSplit = !isSplit;
 	}
 	
+}
+
+void Game::SkelySceneLogic(float deltaTime)
+{
+	//skeleAnimator->AnimateSkeleton(deltaTime);
 }
 
 void Game::OnResize()
@@ -1133,6 +1138,9 @@ void Game::Update(float deltaTime, float totalTime)
 	{
 	case SCENE_ANIM:
 		AnimSceneLogic(deltaTime);
+		break;
+	case SCENE_SKELE:
+		SkelySceneLogic(deltaTime);
 		break;
 	default:
 		break;

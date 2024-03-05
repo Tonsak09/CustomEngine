@@ -81,6 +81,7 @@ private:
 
 	// Logic specifically for animation demonstration
 	void AnimSceneLogic(float deltaTime);
+	void SkelySceneLogic(float dletaTime);
 
 	/// <summary>
 	/// Searches through every node within the scene to find a node with the 
@@ -229,6 +230,7 @@ private:
 	std::shared_ptr<std::vector<unsigned int>> boneIndicies;
 
 	//const aiScene* importScene;
+	std::shared_ptr<Animator> skeleAnimator;
 	std::shared_ptr<SkeletalHierarchy> skelyHierarchy;
 	std::shared_ptr<AnimClip> importAnimClip;
 

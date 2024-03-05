@@ -102,7 +102,7 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 	{
 		int tailPosIndex = 0;
 		int headPosIndex = 0;
-
+		
 		int tailRotIndex = 0;
 		int headRotIndex = 0;
 

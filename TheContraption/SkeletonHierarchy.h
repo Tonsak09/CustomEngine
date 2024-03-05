@@ -12,6 +12,9 @@
 #include "Mesh.h"
 
 #include <memory>
+#include "Transform.h"
+
+using namespace DirectX;
 
 /// <summary>
 /// Represents a single bone within the hierarchy 
@@ -35,9 +38,13 @@ public:
 
 	void SetBone(aiBone* bone);
 	void SetBNode(aiNode* bNode);
+	void SetPosition(XMFLOAT3 position);
+	void SetRotationEuler(XMFLOAT3 rotation);
 
 
 	void RecurPrint(int layer = 0);
+
+	void ResetTransformToLoad();
 
 private:
 
@@ -47,6 +54,7 @@ private:
 	aiBone* bone;
 	aiNode* bNode;
 
+	std::shared_ptr<Transform> transform;
 	std::shared_ptr<DirectX::XMMATRIX> loadTransform;
 };
 
@@ -66,6 +74,7 @@ public:
 	/// </summary>
 	/// <param name="bones"></param>
 	void GenerateHierachy(const aiScene* scene, aiBone** bones, int boneCount);
+	void UpdateMember(std::string memberName, XMFLOAT3 position, XMFLOAT4 rotation);
 
 	std::shared_ptr<B_Member> GetRoot(std::shared_ptr<B_Member> startPoint);
 	std::shared_ptr<Mesh> GetMesh();
