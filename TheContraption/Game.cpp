@@ -832,8 +832,8 @@ void Game::ImportFBX()
 	//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(-1.5708, 0.0f, 0.0f);
 
 	// Put all into scene(s)
-	skeleScene->SetEntities(skelyEnts);
-	skeleScene->SetDebugEntities(skelyDebugEnts);
+	skeleScene->SetEntities(skelyEnts);				// Imported Mesh
+	skeleScene->SetDebugEntities(skelyDebugEnts);	// Created skeletal hierachy
 	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 	LoadFBXAnimations(importScene);
@@ -988,7 +988,8 @@ void Game::AnimSceneLogic(float deltaTime)
 
 void Game::SkelySceneLogic(float deltaTime)
 {
-	//skeleAnimator->AnimateSkeleton(deltaTime);
+	skeleAnimator->AnimateSkeleton(device, context, deltaTime);
+	//skelyDebugEnts->
 }
 
 void Game::OnResize()

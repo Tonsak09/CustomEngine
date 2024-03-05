@@ -67,6 +67,9 @@ public:
 	void ConstructMesh(
 		Microsoft::WRL::ComPtr<ID3D11Device> device, 
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
+	void UpdateMesh(
+		Microsoft::WRL::ComPtr<ID3D11Device> device,
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
 
 	/// <summary>
 	/// Using the array of bones iterates through the scene to create a hierarchy 
@@ -95,6 +98,10 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<B_Member>> nameToBMember;
 	std::shared_ptr<B_Member > rootMember;
 
+	std::shared_ptr<std::vector<Vertex>> verticies;
+	std::shared_ptr<std::vector<unsigned int>> indicies;
 	std::shared_ptr<Mesh> mesh;
+
+	std::unordered_map<std::string, int> memberNameToVertexIndex;
 };
 

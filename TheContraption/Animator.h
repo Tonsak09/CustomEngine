@@ -21,7 +21,10 @@ public:
 	Animator(std::shared_ptr<SkeletalHierarchy> skeleton);
 	Animator(std::shared_ptr<SkeletalHierarchy> hierarchy, std::shared_ptr<AnimClip> clip);
 
-	void AnimateSkeleton(float delta);
+	void AnimateSkeleton(
+		Microsoft::WRL::ComPtr<ID3D11Device> device,
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, 
+		float delta);
 
 	void SetClip(std::shared_ptr<AnimClip> clip);
 

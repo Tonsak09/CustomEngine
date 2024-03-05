@@ -19,10 +19,13 @@ Animator::Animator(std::shared_ptr<SkeletalHierarchy> hierarchy, std::shared_ptr
 /// to the attached skeletal hierarchy 
 /// </summary>
 /// <param name="delta"></param>
-void Animator::AnimateSkeleton(float delta)
+void Animator::AnimateSkeleton(
+	Microsoft::WRL::ComPtr<ID3D11Device> device,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, 
+	float delta)
 {
 	timeLine->UpdateTimeline(delta);
-	printf("%f \n", timeLine->GetTime());
+	/*printf("%f \n", timeLine->GetTime());*/
 
 	std::vector<std::shared_ptr<AnimMoment>> currentMoments = currentClip->GetMoments(timeLine->GetTime());
 
@@ -32,6 +35,8 @@ void Animator::AnimateSkeleton(float delta)
 		skeleton->UpdateMember(moment->GetName(), moment->GetPosition(), moment->GetRotation());
 	}
 
+	// Update the mesh with new values 
+	skeleton->UpdateMesh(device, context);
 }
 
 void Animator::SetClip(std::shared_ptr<AnimClip> clip)

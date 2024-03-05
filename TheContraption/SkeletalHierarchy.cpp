@@ -76,7 +76,8 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 /// <param name="rotation"></param>
 void SkeletalHierarchy::UpdateMember(std::string memberName, XMFLOAT3 position, XMFLOAT4 rotation)
 {
-	//nameToBMember[memberName]->SetPosition(position);
+	nameToBMember[memberName]->SetPosition(position);
+	verticies->at(memberNameToVertexIndex[memberName]).Position = position;
 	//nameToBMember[memberName]->SetRotationEuler(rotation);
 }
 
@@ -115,8 +116,8 @@ void  SkeletalHierarchy::ConstructMesh(
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 {
 	// Create a vector of each bone 
-	std::shared_ptr<std::vector<Vertex>> verticies =		std::make_shared<std::vector<Vertex>>();
-	std::shared_ptr<std::vector<unsigned int>> indicies =	std::make_shared<std::vector<unsigned int>>();;
+	verticies =		std::make_shared<std::vector<Vertex>>();
+	indicies =	std::make_shared<std::vector<unsigned int>>();;
 
 
 	// When adding a new bone to this vector
@@ -131,6 +132,18 @@ void  SkeletalHierarchy::ConstructMesh(
 	verticies->push_back(B_MemberToVertex(nullptr, rootMember));
 	RecurConstructIndicies(rootMember, verticies, indicies);
 
+	UpdateMesh(device, context);
+}
+
+/// <summary>
+/// Creates a mesh using this hierachy's verticies and indicies 
+/// </summary>
+/// <param name="device"></param>
+/// <param name="context"></param>
+void SkeletalHierarchy::UpdateMesh(
+	Microsoft::WRL::ComPtr<ID3D11Device> device,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+{
 	mesh = std::make_shared<Mesh>(device, context,
 		&(*verticies)[0],
 		&(*indicies)[0],
@@ -152,6 +165,11 @@ void SkeletalHierarchy::RecurConstructIndicies(
 {
 	int index = verts->size() - 1;
 
+	// Set relation between current member and 
+	// its vertex 
+	memberNameToVertexIndex[current->GetBone()->mName.C_Str()] = index;
+
+
 	for (auto& child : current->GetChildren())
 	{
 		verts->push_back(B_MemberToVertex(current, child));
@@ -168,7 +186,7 @@ void SkeletalHierarchy::RecurConstructIndicies(
 }
 
 /// <summary>
-/// Recursively travel through node children to find the
+/// Recursively travel through node children to find the node relating to the given bone 
 /// </summary>
 /// <returns></returns>
 aiNode* SkeletalHierarchy::FindNode(aiBone* bone, aiNode** nodes, int nodeCount)
@@ -319,14 +337,35 @@ void B_Member::SetBNode(aiNode* bNode)
 
 void B_Member::SetPosition(XMFLOAT3 position)
 {
+	if (transform == nullptr)
+	{
+		// We could be getting an unset member 
+		transform = std::make_shared<Transform>();
+	}
+
 	transform->SetPosition(position);
+
+	// Set vertex associated with this member's position 
+	// Set skeleton to dirty so it must update the mesh
+	// when called 
+	
 }
 
 void B_Member::SetRotationEuler(XMFLOAT3 rotation)
 {
+	if (transform == nullptr)
+	{
+		// We could be getting an unset member 
+		transform = std::make_shared<Transform>();
+	}
+
 	transform->SetEulerRotation(rotation);
 }
 
+/// <summary>
+/// Prints out the bone hierachy
+/// </summary>
+/// <param name="layer"></param>
 void B_Member::RecurPrint(int layer)
 {
 	for (int i = 0; i < layer; i++)
