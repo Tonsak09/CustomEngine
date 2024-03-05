@@ -989,6 +989,8 @@ void Game::AnimSceneLogic(float deltaTime)
 void Game::SkelySceneLogic(float deltaTime)
 {
 	skeleAnimator->AnimateSkeleton(device, context, deltaTime);
+
+	skeleScene->GetDebugEntities()[0]->SetModel(skelyHierarchy->GetMesh());
 	//skelyDebugEnts->
 }
 

@@ -109,11 +109,11 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 		// Find position key times 
 		for (int i = 0; i < positionKeyTimes.size(); i++)
 		{
-			if (positionKeyTimes[i] <= time)
+			if (positionKeyTimes[i] > time )
 			{
 				// Tail found!
-				tailPosIndex = i;
-				headPosIndex = (i + 1 >= positionKeyTimes.size()) ? i : i + 1;
+				tailPosIndex = i - 1;
+				headPosIndex = (i); //+ 1 >= positionKeyTimes.size()) ? i : i + 1;
 
 				break;
 			}
@@ -122,11 +122,11 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 		// Find rotation key times 
 		for (int i = 0; i < rotationKeyTimes.size(); i++)
 		{
-			if (rotationKeyTimes[i] <= time)
+			if (rotationKeyTimes[i] >= time)
 			{
 				// Tail found!
-				tailPosIndex = i;
-				headPosIndex = (i + 1 >= rotationKeyTimes.size()) ? i : i + 1;
+				tailRotIndex = i;
+				headRotIndex = (i + 1 >= rotationKeyTimes.size()) ? i : i + 1;
 
 				break;
 			}
@@ -135,8 +135,18 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 
 		// Lerp Position
 		DirectX::XMFLOAT3 pos;
-		float lerpPos = (time - positionKeyTimes[tailPosIndex]) / 
-						(positionKeyTimes[headPosIndex] - positionKeyTimes[tailPosIndex]);
+		float lerpPos;
+
+		if (tailPosIndex == headPosIndex)
+		{
+			lerpPos = 0.0f;
+		}
+		else
+		{
+			lerpPos = (time - positionKeyTimes[tailPosIndex]) /
+				(positionKeyTimes[headPosIndex] - positionKeyTimes[tailPosIndex]);
+		}
+
 		DirectX::XMVECTOR tailPos = DirectX::XMLoadFloat3(&positions[tailPosIndex]);
 		DirectX::XMVECTOR headPos = DirectX::XMLoadFloat3(&positions[headPosIndex]);
 

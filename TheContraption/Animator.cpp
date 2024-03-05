@@ -29,10 +29,13 @@ void Animator::AnimateSkeleton(
 
 	std::vector<std::shared_ptr<AnimMoment>> currentMoments = currentClip->GetMoments(timeLine->GetTime());
 
+
 	// Iterate and update each bone vertex 
 	for (std::shared_ptr<AnimMoment> moment : currentMoments)
 	{
 		skeleton->UpdateMember(moment->GetName(), moment->GetPosition(), moment->GetRotation());
+		printf("%f, %f, %f\n", moment->GetPosition().x, moment->GetPosition().y, moment->GetPosition().z);
+
 	}
 
 	// Update the mesh with new values 

@@ -23,6 +23,7 @@ public:
 	std::shared_ptr <Transform> GetTransform();
 	std::shared_ptr<Material> GetMat();
 	void SetMat(std::shared_ptr<Material> nextMat);
+	void SetModel(std::shared_ptr<Mesh> model);
 
 	// In the future this could be allocated to a rendering class that holds all drawing data intstead
 	// of objects drawing themselves 

@@ -285,6 +285,11 @@ std::vector<std::shared_ptr<Entity>> Scene::GetEntities()
 	return entities;
 }
 
+std::vector<std::shared_ptr<Entity>> Scene::GetDebugEntities()
+{
+	return debugEntities;
+}
+
 std::vector<std::shared_ptr<Light>> Scene::GetLights()
 {
 	return lights;

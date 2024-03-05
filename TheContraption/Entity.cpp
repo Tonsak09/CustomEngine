@@ -28,6 +28,11 @@ void Entity::SetMat(std::shared_ptr<Material> nextMat)
 	mat = nextMat;
 }
 
+void Entity::SetModel(std::shared_ptr<Mesh> mesh)
+{
+	model = mesh;
+}
+
 void Entity::Draw(
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context, 
 	std::shared_ptr<Camera> camera)

@@ -78,6 +78,7 @@ void SkeletalHierarchy::UpdateMember(std::string memberName, XMFLOAT3 position, 
 {
 	nameToBMember[memberName]->SetPosition(position);
 	verticies->at(memberNameToVertexIndex[memberName]).Position = position;
+	//verticies->at(memberNameToVertexIndex[memberName]).Position = position;
 	//nameToBMember[memberName]->SetRotationEuler(rotation);
 }
 

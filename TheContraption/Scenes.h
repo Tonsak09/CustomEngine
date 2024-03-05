@@ -67,6 +67,7 @@ public:
 	);
 
 	std::vector<std::shared_ptr<Entity>> GetEntities();
+	std::vector<std::shared_ptr<Entity>> GetDebugEntities();
 	std::vector<std::shared_ptr<Light>> GetLights();
 	std::unordered_map<Light*, Entity*> GetLightToGizmos();
 	std::vector<std::shared_ptr<Camera>> GetAllCams();
