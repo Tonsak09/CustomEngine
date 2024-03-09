@@ -2,6 +2,7 @@
 #include <DirectXMath.h>
 #include <memory>
 #include <vector>
+using namespace DirectX;
 
 class Transform
 {
@@ -14,7 +15,8 @@ private:
 	/// <summary>
 	/// Represents this objects rotation as a euler 
 	/// </summary>
-	DirectX::XMFLOAT3 eulerRotation;
+	//DirectX::XMFLOAT3 eulerRotation;
+	DirectX::XMFLOAT4 rotation;
 
 	DirectX::XMFLOAT4X4 world;
 	DirectX::XMFLOAT4X4 worldTranspose;
@@ -69,6 +71,11 @@ public:
 	/// <param name="rotation"></param>
 	void SetEulerRotation(DirectX::XMFLOAT3 rotation);
 	/// <summary>
+	/// Sets the rotation of this transform using the given quaternion 
+	/// </summary>
+	/// <param name="quaterion"></param>
+	void SetQuatRotation(DirectX::XMFLOAT4 quaterion);
+	/// <summary>
 	/// Sets the scale of this transform to the given components
 	/// </summary>
 	void SetScale(float x, float y, float z);
@@ -93,7 +100,7 @@ public:
 	/// Get this transform's current euler rotation 
 	/// </summary>
 	/// <returns></returns>
-	DirectX::XMFLOAT3 GetEulerRotation();
+	//DirectX::XMFLOAT3 GetEulerRotation();
 	/// <summary>
 	/// Get this transform's current x, y, and z scalar components 
 	/// </summary>

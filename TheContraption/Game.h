@@ -70,6 +70,8 @@ private:
 	void LoadShadowResources();
 
 	void ImportFBX();
+	void LoadMeshVerticies(aiMesh* mesh, std::shared_ptr<std::vector<Vertex>> outputVerticies);
+	int LoadMeshIndicies(aiMesh* mesh, std::shared_ptr<std::vector<unsigned int>> outputIndicies);
 	void LoadFBXAnimations(const aiScene* scene);
 	std::shared_ptr<AnimClip> idleClip;
 
@@ -150,6 +152,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
 
 	std::unordered_map<std::shared_ptr<Material>, std::shared_ptr<MatData>> matToResources;
+
+	// Universal Meshes
+	std::shared_ptr<Mesh> sphere;
+	std::shared_ptr<Mesh> cube;
 
 	// Light gizmo itmes 
 	std::shared_ptr<Mesh> lightGUIModel;

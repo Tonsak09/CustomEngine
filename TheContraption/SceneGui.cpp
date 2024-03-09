@@ -22,13 +22,13 @@ void SceneGui::CreateEntityGui(std::shared_ptr<Entity> entity)
 {
 	std::shared_ptr <Transform> trans = entity->GetTransform();
 	XMFLOAT3 pos = *(trans->GetPosition().get());
-	XMFLOAT3 rot = trans->GetEulerRotation();
+	//XMFLOAT3 rot = trans->GetEulerRotation();
 	XMFLOAT3 sca = trans->GetScale();
 
 	XMFLOAT2 uvOff = entity.get()->GetMat()->GetUVOffset();
 
 	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) trans->SetPosition(pos);
-	if (ImGui::DragFloat3("Rotation (Radians)", &rot.x, 0.01f)) trans->SetEulerRotation(rot);
+	//if (ImGui::DragFloat3("Rotation (Radians)", &rot.x, 0.01f)) trans->SetEulerRotation(rot);
 	if (ImGui::DragFloat3("Scale", &sca.x, 0.01f)) trans->SetScale(sca);
 
 	ImGui::Dummy(ImVec2(0, 10));

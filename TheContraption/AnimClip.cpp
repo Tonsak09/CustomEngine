@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnimClip.h"
+using namespace DirectX;
 
 
 AnimClip::AnimClip(std::vector<std::shared_ptr<BoneClip>> boneClips, float duration, float ticksPerSecond, bool loops) :
@@ -134,7 +135,8 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 
 
 		// Lerp Position
-		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT3 pos = positions[tailPosIndex];
+
 		float lerpPos;
 
 		if (tailPosIndex == headPosIndex)
@@ -151,6 +153,7 @@ std::shared_ptr<AnimMoment> BoneClip::GetMoment(float time)
 		DirectX::XMVECTOR headPos = DirectX::XMLoadFloat3(&positions[headPosIndex]);
 
 		DirectX::XMStoreFloat3(&pos, DirectX::XMVectorLerp(tailPos, headPos, lerpPos));
+
 
 		// Slerp Rotation 
 		DirectX::XMFLOAT4 rot;

@@ -28,13 +28,14 @@ void Animator::AnimateSkeleton(
 	/*printf("%f \n", timeLine->GetTime());*/
 
 	std::vector<std::shared_ptr<AnimMoment>> currentMoments = currentClip->GetMoments(timeLine->GetTime());
+	printf("%f, %f, %f\n", currentMoments[1]->GetPosition().x, currentMoments[1]->GetPosition().y, currentMoments[1]->GetPosition().z);
 
 
 	// Iterate and update each bone vertex 
 	for (std::shared_ptr<AnimMoment> moment : currentMoments)
 	{
 		skeleton->UpdateMember(moment->GetName(), moment->GetPosition(), moment->GetRotation());
-		printf("%f, %f, %f\n", moment->GetPosition().x, moment->GetPosition().y, moment->GetPosition().z);
+		//printf("%f, %f, %f\n", moment->GetPosition().x, moment->GetPosition().y, moment->GetPosition().z);
 
 	}
 

@@ -2,7 +2,7 @@
 
 Transform::Transform() :
 	position(std::make_shared<DirectX::XMFLOAT3>(0.0f, 0.0f, 0.0f)),
-	eulerRotation(0.0f, 0.0f, 0.0f),
+	rotation(0.0f, 0.0f, 0.0f, 1.0f),
 	scale(1.0f, 1.0f, 1.0f)
 {
 	DirectX::XMStoreFloat4x4(&world, DirectX::XMMatrixIdentity());
@@ -24,19 +24,20 @@ void Transform::CleanMatrices()
 	if (matIsDirty)
 	{
 		// Get each of parts that represent the world matrix 
+
 		DirectX::XMMATRIX pos =
 			DirectX::XMMatrixTranslationFromVector(
 				DirectX::XMLoadFloat3(position.get()));
 
 		DirectX::XMMATRIX rot =
-			DirectX::XMMatrixRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&eulerRotation));
+			DirectX::XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&rotation));
 
 		DirectX::XMMATRIX sc =
 			DirectX::XMMatrixScalingFromVector(
 				XMLoadFloat3(&scale));
 
 		// Update the matricies 
-		DirectX::XMMATRIX wm = pos * rot * sc;
+		DirectX::XMMATRIX wm = sc * rot * pos; //pos * rot * sc;
 		DirectX::XMStoreFloat4x4(&world, wm);
 		DirectX::XMStoreFloat4x4(&worldTranspose,
 			DirectX::XMMatrixInverse(0, DirectX::XMMatrixTranspose(wm)));
@@ -50,7 +51,7 @@ void Transform::CleanVectors()
 	if (!dirIsDirty)
 		return;
 
-	DirectX::XMVECTOR rotQuat = DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&eulerRotation));
+	DirectX::XMVECTOR rotQuat = DirectX::XMLoadFloat4(&rotation);
 	DirectX::XMStoreFloat3(&right, DirectX::XMVector3Rotate(DirectX::XMVectorSet(1, 0, 0, 0), rotQuat));
 	DirectX::XMStoreFloat3(&up, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 1, 0, 0), rotQuat));
 	DirectX::XMStoreFloat3(&forward, DirectX::XMVector3Rotate(DirectX::XMVectorSet(0, 0, 1, 0), rotQuat));
@@ -80,17 +81,30 @@ void Transform::SetPosition(DirectX::XMFLOAT3 position)
 
 void Transform::SetEulerRotation(float pitch, float yaw, float roll)
 {
-	eulerRotation.x = pitch;
+	DirectX::XMFLOAT3 eulerRotation(pitch, yaw, roll);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&eulerRotation));
+	XMStoreFloat4(&rotation, quat);
+
+	/*eulerRotation.x = pitch;
 	eulerRotation.y = yaw;
-	eulerRotation.z = roll;
+	eulerRotation.z = roll;*/
 
 	matIsDirty = true;
 	dirIsDirty = true;
 }
 
-void Transform::SetEulerRotation(DirectX::XMFLOAT3 rotation)
+void Transform::SetEulerRotation(DirectX::XMFLOAT3 rot)
 {
-	this->eulerRotation = rotation;
+	/*this->eulerRotation = rotation;*/
+	XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&rot));
+	XMStoreFloat4(&rotation, quat);
+
+	matIsDirty = true;
+	dirIsDirty = true;
+}
+
+void Transform::SetQuatRotation(DirectX::XMFLOAT4 quaternion)
+{
 
 	matIsDirty = true;
 	dirIsDirty = true;

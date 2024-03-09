@@ -64,7 +64,7 @@ Game::Game(HINSTANCE hInstance)
 	eyeComTime = 1.0f;
 	eyeComCurve = EASE_IN_BOUNCE;
 
-	startAnimation = EASE_IN_BACK;
+	startAnimation = true;
 
 	buttonCooldown = 2.0f;
 
@@ -73,6 +73,11 @@ Game::Game(HINSTANCE hInstance)
 	boneVerticies = std::make_shared<std::vector<Vertex>>();
 	boneIndicies = std::make_shared<std::vector<unsigned int>>();
 
+	directionalLight1 = Light();
+	directionalLight2 = Light();
+	directionalLight3 = Light();
+	pointLight1 = Light();
+	pointLight2 = Light();
 }
 
 Game::~Game()
@@ -371,9 +376,9 @@ void Game::CreateGeometry()
 
 	
 	// General Models 
-	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
+	sphere = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/sphere.obj").c_str());
+	cube = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/cube.obj").c_str());
 	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/helix.obj").c_str());
-	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/cube.obj").c_str());
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/torus.obj").c_str());
 	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/quad_double_sided.obj").c_str());
 	lightGUIModel = std::make_shared<Mesh>(device, context, FixPath(L"../../Assets/Models/LightGUIModel.obj").c_str());
@@ -725,64 +730,30 @@ void Game::ImportFBX()
 
 	printf("\n");
 
-	unsigned int vertexCounter = 0;
 	// Recursivlley travels the bones
 	auto recur = [&](auto&& recur, aiNode* node, aiMatrix4x4 parentMatrix)
 	{
 		// Iterate through a node's meshes and then set all the bones 
-		for (int m = 0; m < node->mNumMeshes; m++)
+		for (unsigned int m = 0; m < node->mNumMeshes; m++)
 		{
 			auto mesh = importScene->mMeshes[node->mMeshes[m]];
 
-			// Set up each vertex 
-			vertexCounter = 0;
-			do
-			{
-				Vertex vert;
-				vert.Position = DirectX::XMFLOAT3(
-					mesh->mVertices[vertexCounter].x,
-					mesh->mVertices[vertexCounter].y,
-					mesh->mVertices[vertexCounter].z
-				);
-				vert.Normal = DirectX::XMFLOAT3(
-					mesh->mNormals[vertexCounter].x,
-					mesh->mNormals[vertexCounter].y,
-					mesh->mNormals[vertexCounter].z
-				);
-				vert.Tangent = DirectX::XMFLOAT3(
-					mesh->mTangents[vertexCounter].x,
-					mesh->mTangents[vertexCounter].y,
-					mesh->mTangents[vertexCounter].z
-				);
-				vert.UV = DirectX::XMFLOAT2(
-					(float)mesh->mTextureCoords[0][vertexCounter].x,
-					(float)mesh->mTextureCoords[0][vertexCounter].y
-				);
+			LoadMeshVerticies(mesh, skeleVerteicies);
+			indexCounter = LoadMeshIndicies(mesh, skeleIndicies);
+			
 
-
-				skeleVerteicies->push_back(vert);
-
-				vertexCounter++;
-			} while (vertexCounter < mesh->mNumVertices);
-			printf("\n");
-
-			// Indicies 
-			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-			{
-				aiFace face = mesh->mFaces[f];
-
-				indexCounter += mesh->mFaces[f].mNumIndices;
-				for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
-				{
-					skeleIndicies->push_back(face.mIndices[i]);
-				}
-			}
+			// Converted Assimp mesh into our mesh type 
+			std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
+				&(*skeleVerteicies)[0],
+				&(*skeleIndicies)[0],
+				mesh->mNumVertices, indexCounter);
 
 
 			// Bones
 			if (mesh->mNumBones > 0) // Curent testing mesh only has one set of bones 
 				skelyHierarchy = std::make_shared<SkeletalHierarchy>(importScene, mesh->mBones, mesh->mNumBones);
 
+			// Set a sphere for each bone position 
 			for (unsigned int i = 0; i < mesh->mNumBones; i++)
 			{
 				auto bone = mesh->mBones[i];
@@ -794,8 +765,9 @@ void Game::ImportFBX()
 				boneMatrix.Decompose(sca, rot, pos);
 				
 				// Sphere for each bone position
-				//skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(sphere, schlickBronze)));
-				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickBronze)));
+				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
+				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(45.0f * (PI / 180.0f), 0.0f, 0.0f);
 			}
 
 			if (skelyHierarchy != nullptr)
@@ -817,10 +789,7 @@ void Game::ImportFBX()
 	recur(recur, importScene->mRootNode, base);
 
 
-	std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
-		&(*skeleVerteicies)[0],
-		&(*skeleIndicies)[0],
-		vertexCounter, indexCounter);
+	
 
 	/*std::shared_ptr<Mesh> bonesMesh = std::make_shared<Mesh>(device, context,
 	&(*boneVerticies)[0],
@@ -837,6 +806,64 @@ void Game::ImportFBX()
 	skeleScene->GenerateLightGizmos(lightGUIModel, vertexShader, pixelShader);
 
 	LoadFBXAnimations(importScene);
+}
+
+void Game::LoadMeshVerticies(aiMesh* mesh, std::shared_ptr<std::vector<Vertex>> outputVerticies)
+{
+	// Set up each vertex 
+	unsigned int vertexCounter = 0;
+	do
+	{
+		Vertex vert;
+		vert.Position = DirectX::XMFLOAT3(
+			mesh->mVertices[vertexCounter].x,
+			mesh->mVertices[vertexCounter].y,
+			mesh->mVertices[vertexCounter].z
+		);
+		vert.Normal = DirectX::XMFLOAT3(
+			mesh->mNormals[vertexCounter].x,
+			mesh->mNormals[vertexCounter].y,
+			mesh->mNormals[vertexCounter].z
+		);
+		vert.Tangent = DirectX::XMFLOAT3(
+			mesh->mTangents[vertexCounter].x,
+			mesh->mTangents[vertexCounter].y,
+			mesh->mTangents[vertexCounter].z
+		);
+		vert.UV = DirectX::XMFLOAT2(
+			(float)mesh->mTextureCoords[0][vertexCounter].x,
+			(float)mesh->mTextureCoords[0][vertexCounter].y
+		);
+
+
+		outputVerticies->push_back(vert);
+
+		vertexCounter++;
+	} while (vertexCounter < mesh->mNumVertices);
+}
+
+/// <summary>
+/// Loads the indicies of our object into a vector 
+/// </summary>
+/// <param name="mesh"></param>
+/// <param name="outputIndicies"></param>
+/// <returns>Index count</returns>
+int Game::LoadMeshIndicies(aiMesh* mesh, std::shared_ptr<std::vector<unsigned int>> outputIndicies)
+{
+	// Indicies 
+	int indexCounter = 0;
+	for (unsigned int f = 0; f < mesh->mNumFaces; f++)
+	{
+		aiFace face = mesh->mFaces[f];
+
+		indexCounter += mesh->mFaces[f].mNumIndices;
+		for (unsigned int i = 0; i < mesh->mFaces[f].mNumIndices; i++)
+		{
+			skeleIndicies->push_back(face.mIndices[i]);
+		}
+	}
+
+	return indexCounter;
 }
 
 void Game::LoadFBXAnimations(const aiScene* scene)
@@ -860,7 +887,7 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 	std::vector<std::shared_ptr<BoneClip>> boneClips;
 
 	// Print out all animation data 
-	for (int m = 0; m < animation->mNumChannels; m++)
+	for (unsigned int m = 0; m < animation->mNumChannels; m++)
 	{
 		/*
 			std::string name,
@@ -877,11 +904,11 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 		auto&& channels = animation->mChannels[m];
 
 		// Positions 
-		for (int i = 0; i < channels->mNumPositionKeys; i++)
+		for (unsigned int i = 0; i < channels->mNumPositionKeys; i++)
 		{
 			aiVector3D pos = channels->mPositionKeys[i].mValue;
 
-			posKeyTimes.push_back(channels->mPositionKeys[i].mTime);
+			posKeyTimes.push_back(static_cast<float>(channels->mPositionKeys[i].mTime));
 			positions.push_back(XMFLOAT3(pos.x, pos.y, pos.z));
 
 			/*printf("   ");
@@ -894,7 +921,7 @@ void Game::LoadFBXAnimations(const aiScene* scene)
 		}
 
 		// Rotations 
-		for (int i = 0; i < channels->mNumRotationKeys; i++)
+		for (unsigned int i = 0; i < channels->mNumRotationKeys; i++)
 		{
 			aiQuaternion rot = channels->mRotationKeys[i].mValue;
 
@@ -988,9 +1015,9 @@ void Game::AnimSceneLogic(float deltaTime)
 
 void Game::SkelySceneLogic(float deltaTime)
 {
-	skeleAnimator->AnimateSkeleton(device, context, deltaTime);
+	//skeleAnimator->AnimateSkeleton(device, context, deltaTime);
 
-	skeleScene->GetDebugEntities()[0]->SetModel(skelyHierarchy->GetMesh());
+	//skeleScene->GetDebugEntities()[0]->SetModel(skelyHierarchy->GetMesh());
 	//skelyDebugEnts->
 }
 

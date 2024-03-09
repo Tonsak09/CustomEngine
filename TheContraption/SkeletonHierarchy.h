@@ -54,7 +54,7 @@ private:
 	aiBone* bone;
 	aiNode* bNode;
 
-	std::shared_ptr<Transform> transform;
+	std::shared_ptr<Transform> transform; // Connect this transform to a entity? 
 	std::shared_ptr<DirectX::XMMATRIX> loadTransform;
 };
 
