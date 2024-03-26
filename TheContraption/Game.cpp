@@ -767,7 +767,9 @@ void Game::ImportFBX()
 				// Sphere for each bone position
 				skelyEnts.push_back(std::shared_ptr<Entity>(new Entity(cube, schlickBronze)));
 				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
-				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(45.0f * (PI / 180.0f), 0.0f, 0.0f);
+				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(45.0f * (PI / 180.0f), 0.0f, 0.0f);
+				skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetEulerRotation(rot.x, rot.y, rot.z);
+				//skelyEnts[skelyEnts.size() - 1]->GetTransform()->SetQuatRotation(XMFLOAT4(bone->mOffsetMatrix.ro);
 			}
 
 			if (skelyHierarchy != nullptr)
@@ -1015,7 +1017,7 @@ void Game::AnimSceneLogic(float deltaTime)
 
 void Game::SkelySceneLogic(float deltaTime)
 {
-	//skeleAnimator->AnimateSkeleton(device, context, deltaTime);
+	skeleAnimator->AnimateSkeleton(device, context, deltaTime);
 
 	//skeleScene->GetDebugEntities()[0]->SetModel(skelyHierarchy->GetMesh());
 	//skelyDebugEnts->

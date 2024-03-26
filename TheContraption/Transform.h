@@ -15,8 +15,8 @@ private:
 	/// <summary>
 	/// Represents this objects rotation as a euler 
 	/// </summary>
-	//DirectX::XMFLOAT3 eulerRotation;
-	DirectX::XMFLOAT4 rotation;
+	DirectX::XMFLOAT3 eulerRotation;
+	//DirectX::XMFLOAT4 rotation;
 
 	DirectX::XMFLOAT4X4 world;
 	DirectX::XMFLOAT4X4 worldTranspose;
@@ -100,7 +100,7 @@ public:
 	/// Get this transform's current euler rotation 
 	/// </summary>
 	/// <returns></returns>
-	//DirectX::XMFLOAT3 GetEulerRotation();
+	DirectX::XMFLOAT3 GetEulerRotation();
 	/// <summary>
 	/// Get this transform's current x, y, and z scalar components 
 	/// </summary>
