@@ -20,7 +20,7 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 
 		/*
 			Members may already exist since when we create
-			a member it must be attached as child to another
+			a member it MUST be attached as a child to another
 			member. The only exception is the root which we
 			take care of intially. 
 			
@@ -42,9 +42,25 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		}
 		else
 		{
+
+			/*
+			auto bone = mesh->mBones[i];
+				aiMatrix4x4 boneMatrix = parentMatrix * bone->mOffsetMatrix.Inverse();
+
+				aiVector3D sca;
+				aiVector3D rot;
+				aiVector3D pos;
+				boneMatrix.Decompose(sca, rot, pos);
+			*/
 			// Set variables 
 			nameToBMember[name]->SetBone(bone);
 			nameToBMember[name]->SetBNode(bNode);
+
+			aiVector3D sca;
+			aiVector3D rot;
+			aiVector3D pos;
+			bone->mOffsetMatrix.Inverse().Decompose(sca, rot, pos);
+			nameToBMember[name]->GetTransform()->SetPosition((float)pos.x, (float)pos.y, (float)pos.z);
 		}
 
 
@@ -56,7 +72,7 @@ void SkeletalHierarchy::GenerateHierachy(const aiScene* scene, aiBone** bones, i
 		std::string parentName = bNode->mParent->mName.C_Str();
 		if (nameToBMember.find(parentName) == nameToBMember.end())
 		{
-			// Create parent member 
+			// Create empty parent member 
 			nameToBMember[parentName] = std::make_shared<B_Member>(nullptr, nullptr);
 		}
 		
@@ -276,11 +292,19 @@ B_Member::B_Member(aiBone* bone, aiNode* bNode) :
 
 };
 
+/// <summary>
+/// Add a B_Member as a child to this member 
+/// </summary>
+/// <param name="member"></param>
 void B_Member::AddChild(std::shared_ptr<B_Member> member)
 {
 	children.push_back(member);
 }
 
+/// <summary>
+/// Remove a B_Member as a child to this member 
+/// </summary>
+/// <param name="child"></param>
 void B_Member::RemoveChild(std::shared_ptr<B_Member> child)
 {
 	std::vector<std::shared_ptr<B_Member>>::iterator it;
@@ -292,6 +316,10 @@ void B_Member::RemoveChild(std::shared_ptr<B_Member> child)
 	}
 }
 
+/// <summary>
+/// Get this member's parent. Nullptr if not accessible 
+/// </summary>
+/// <returns></returns>
 std::shared_ptr<B_Member> B_Member::GetParent()
 {
 	return parent;
@@ -310,6 +338,11 @@ aiBone* B_Member::GetBone()
 aiNode* B_Member::GetNode()
 {
 	return bNode;
+}
+
+std::shared_ptr<Transform> B_Member::GetTransform()
+{
+	return transform;
 }
 
 void B_Member::SetBone(aiBone* bone)
@@ -361,6 +394,11 @@ void B_Member::SetRotationEuler(XMFLOAT3 rotation)
 	}
 
 	transform->SetEulerRotation(rotation);
+}
+
+void  B_Member::SetTransform(std::shared_ptr<Transform>trans)
+{
+	transform = trans;
 }
 
 /// <summary>

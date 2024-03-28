@@ -742,7 +742,7 @@ void Game::ImportFBX()
 			indexCounter = LoadMeshIndicies(mesh, skeleIndicies);
 			
 
-			// Converted Assimp mesh into our mesh type 
+			// Convert Assimp mesh into our mesh type 
 			std::shared_ptr<Mesh> importedMesh = std::make_shared<Mesh>(device, context,
 				&(*skeleVerteicies)[0],
 				&(*skeleIndicies)[0],

@@ -35,12 +35,14 @@ public:
 
 	aiBone* GetBone();
 	aiNode* GetNode();
+	std::shared_ptr<Transform> GetTransform();
 
 	void SetBone(aiBone* bone);
 	void SetBNode(aiNode* bNode);
 	void SetPosition(XMFLOAT3 position);
 	void SetRotationEuler(XMFLOAT3 rotation);
 
+	void SetTransform(std::shared_ptr<Transform> trans);
 
 	void RecurPrint(int layer = 0);
 
